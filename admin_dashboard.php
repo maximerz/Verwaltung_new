@@ -132,7 +132,10 @@ include 'includes/header.php';
                     <a href="api_verwaltung.php" class="action-btn btn-primary-modern">
                         <i class="fas fa-key me-2"></i>API-Keys verwalten
                     </a>
-                    <a href="system_test.php" target="_blank" class="action-btn btn-info">
+                    <a href="audit_log_viewer.php" class="action-btn btn-info">
+                        <i class="fas fa-clipboard-list me-2"></i>Audit-Log anzeigen
+                    </a>
+                    <a href="system_test.php" target="_blank" class="action-btn btn-success-modern">
                         <i class="fas fa-vial me-2"></i>System-Tests ausführen
                     </a>
                     <a href="user_management.php" class="action-btn btn-warning-modern">

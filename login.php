@@ -65,6 +65,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['role'] = $user['role'] ?? 'user';
                 $_SESSION['can_manage_users'] = $user['can_manage_users'] ?? 0;
                 
+                // Audit-Log: Login
+                require_once 'includes/audit_log.php';
+                audit_log($PDO, 'LOGIN', 'users', $user['id'], null, ['username' => $username]);
+                
                 // Session explizit speichern
                 session_write_close();
                 session_start();
@@ -73,6 +77,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo "<script>setTimeout(function(){ window.location.href = 'web_oberflaeche.php'; }, 1000);</script>";
                 $error = "<div class='alert alert-success'>Login erfolgreich! Sie werden weitergeleitet...</div>";
             } else {
+                // Audit-Log: Fehlgeschlagener Login
+                require_once 'includes/audit_log.php';
+                audit_log($PDO, 'LOGIN_FAILED', 'users', null, null, ['username' => $username]);
                 $error = "Falsches Passwort.";
             }
         } else {

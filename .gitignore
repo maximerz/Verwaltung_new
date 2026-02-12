@@ -1,0 +1,35 @@
+# Datenbank
+*.db
+*.db-journal
+*.db.backup
+
+# Composer
+/vendor/
+composer.phar
+
+# Backups
+/backups/*.gz
+/backups/*.sql
+
+# Uploads
+/uploads/lieferscheine/*
+!/uploads/lieferscheine/.gitkeep
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporäre Dateien
+*.tmp
+*.bak
+*.cache

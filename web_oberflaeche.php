@@ -4,6 +4,14 @@ require_once 'db_connection.php';
 
 $page_title = 'ERP Dashboard';
 
+// Lager-Warnungen anzeigen
+$lager_warnungen = $_SESSION['lager_warnungen'] ?? [];
+$angebot_id = $_SESSION['angebot_id'] ?? null;
+if (!empty($lager_warnungen)) {
+    unset($_SESSION['lager_warnungen']);
+    unset($_SESSION['angebot_id']);
+}
+
 //Abfrage der Firmen aus der Datenbank
 $stmt_companies = $PDO->prepare("SELECT * FROM firma");
 $stmt_companies->execute();
@@ -50,6 +58,21 @@ $orders = $stmt_orders->fetchAll(PDO::FETCH_ASSOC);
 include 'includes/header.php';
 include 'includes/table-style.php';
 ?>
+
+<?php if (!empty($lager_warnungen)): ?>
+    <div class="alert alert-warning mb-4">
+        <h5><i class="fas fa-exclamation-triangle me-2"></i>Lager-Hinweise für Angebot #<?= $angebot_id ?></h5>
+        <p>Das Angebot wurde erstellt, aber folgende Artikel müssen nachbestellt werden:</p>
+        <ul class="mb-3">
+            <?php foreach ($lager_warnungen as $warnung): ?>
+                <li><?= $warnung ?></li>
+            <?php endforeach; ?>
+        </ul>
+        <a href="lagerverwaltung.php" class="action-btn btn-warning-modern">
+            <i class="fas fa-warehouse me-1"></i>Zur Lagerverwaltung
+        </a>
+    </div>
+<?php endif; ?>
 
                 <!-- Statistics Cards -->
                 <div class="stats-grid">
