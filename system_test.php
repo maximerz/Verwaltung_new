@@ -105,11 +105,11 @@ test("Backup-Verzeichnis existiert", function() {
 });
 
 test("Backup-Script existiert", function() {
-    return file_exists(__DIR__ . '/backup.sh');
+    return file_exists(__DIR__ . '/scripts/backup.sh');
 });
 
 test("Backup-Script ist ausführbar", function() {
-    return is_executable(__DIR__ . '/backup.sh');
+    return is_executable(__DIR__ . '/scripts/backup.sh');
 });
 
 echo "<h2>🔌 8. API-Tests</h2>";

@@ -1,56 +1,120 @@
-# PHP Customer Management System
+# ERP System - Projektstruktur
 
-This is a simple PHP web application for managing customers and orders.
+## 📁 Verzeichnisstruktur
 
-## Setup
+```
+projekt1/
+├── api/                    # REST API Endpunkte
+│   ├── index.php
+│   └── *.php              # API-Module
+│
+├── assets/                # Öffentliche Assets
+│   ├── css/              # Stylesheets
+│   ├── images/           # Bilder & Logos
+│   └── style.css
+│
+├── backups/              # Datenbank-Backups
+│
+├── docs/                 # Dokumentation
+│   ├── technisch/        # Technische Dokumentation
+│   │   ├── README.md
+│   │   ├── INSTALLATION.md
+│   │   ├── TEST_ANLEITUNG.md
+│   │   └── *.md
+│   └── benutzer/         # Benutzer-Dokumentation
+│
+├── includes/            # Wiederverwendbare PHP-Komponenten
+│   ├── header.php
+│   ├── footer.php
+│   ├── navigation.php
+│   ├── 2fa_functions.php
+│   └── *.php
+│
+├── scripts/             # Shell-Skripte & Cron-Jobs
+│   ├── backup.sh
+│   ├── setup-cron.sh
+│   ├── start-server.sh
+│   └── *.sh
+│
+├── src/                 # Kern-Anwendungslogik
+│   ├── config/          # Konfigurationsdateien
+│   │   ├── encryption.php
+│   │   ├── ldap_config.php
+│   │   └── security.php
+│   │
+│   ├── models/          # Datenmodelle (空 - für zukünftige Nutzung)
+│   │
+│   ├── services/        # Geschäftslogik (空 - für zukünftige Nutzung)
+│   │
+│   ├── utils/           # Utility-Funktionen
+│   │   ├── db_connection.php
+│   │   ├── generate_pdf.php
+│   │   ├── generate_angebot_pdf.php
+│   │   └── generate_rechnung_pdf.php
+│   │
+│   └── config/
+│
+├── uploads/             # Benutzer-Uploads
+│   └── lieferscheine/
+│
+├── vendor/              # Composer-Abhängigkeiten
+│
+├── *.php               # Hauptseiten (Web-Interface)
+│
+├── projekt1.db         # SQLite Datenbank
+│
+└── composer.json       # PHP Abhängigkeiten
+```
 
-1. The application will automatically try to connect to MySQL first
-2. If MySQL fails, it falls back to SQLite
-3. Database tables are created automatically
+## 🔄 Rückwärts-Kompatibilität
 
-## Files
+Einige Dateien wurden nach `src/` verschoben, aber es gibt Kompatibilitäts-Wrapper im Hauptverzeichnis:
+- `db_connection.php` → verweist auf `src/db_connection.php`
+- `generate_pdf.php` → verweist auf `src/utils/generate_pdf.php`
+- `generate_angebot_pdf.php` → verweist auf `src/utils/generate_angebot_pdf.php`
+- `generate_rechnung_pdf.php` → verweist auf `src/utils/generate_rechnung_pdf.php`
 
-- `db_connection.php` - Database connection with MySQL/SQLite fallback
-- `web_oberflaeche.php` - Main web interface
-- `create_customer.php` - Create new customer
-- `create_order.php` - Create new order
-- `test_db.php` - Test database connection
-- `setup_mysql.sql` - MySQL database schema
-- `setup_complete.sh` - Automated MySQL setup script
+**Hinweis:** Alle bestehenden Links und Inkludierungen funktionieren weiterhin!
 
-## Usage
+## 🚀 Schnellstart
 
-1. Open `web_oberflaeche.php` in your web browser
-2. View existing companies, customers, and orders
-3. Use the forms to create new customers and orders
+### Webserver starten
+```bash
+./scripts/start-server.sh
+# oder
+./scripts/start-network.sh
+```
 
-## Database Schema
+### Backup erstellen
+```bash
+./scripts/backup.sh
+```
 
-### firma (Companies)
-- id (Primary Key)
-- firmenname (Company Name)
-- strasse (Street)
-- ort (City)
+### Im Browser öffnen
+```
+http://localhost:8000/web_oberflaeche.php
+```
 
-### kundensystem (Customers)
-- id (Primary Key)
-- Vorname (First Name)
-- Nachname (Last Name)
-- EMail (Email)
+## 📝 Wichtige Hauptseiten
 
-### bestellungen (Orders)
-- idbestellung (Primary Key)
-- Kundennummer (Customer Number)
-- Bestellugsnummer (Order Number)
-- Bestellunsname (Order Name)
-- Angebotsnummer (Quote Number)
-- Auftragsnummer (Order Number)
-- Auslieferung (Delivery)
-- Lieferschein (Delivery Note)
-- Lieferzeit (Delivery Time)
+| Datei | Beschreibung |
+|-------|---------------|
+| `web_oberflaeche.php` | Haupt-Dashboard |
+| `kunden_verwaltung.php` | Kundenverwaltung |
+| `lagerverwaltung.php` | Lagerverwaltung |
+| `finanzbuchhaltung.php` | Finanzbuchhaltung |
+| `produktkatalog.php` | Produktkatalog |
+| `admin_dashboard.php` | Admin-Bereich |
 
-## Troubleshooting
+## 🛠️ Technologie-Stack
 
-- If MySQL connection fails, the app automatically uses SQLite
-- Check `test_db.php` to verify database connection
-- Xdebug connection errors are normal for command-line execution
+- **Backend:** PHP 7.4+ / PHP 8.1+
+- **Datenbank:** SQLite (Standard) / MySQL (optional)
+- **Frontend:** HTML5, CSS3, JavaScript (Bootstrap 5)
+- **PDF-Generation:** TCPDF / FPDF
+- **Authentifizierung:** Session-basiert mit 2FA-Unterstützung
+
+## 📄 Lizenz
+
+Eigenes Projekt - Maxi
+

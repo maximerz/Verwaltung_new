@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'db_connection.php';
+require_once 'includes/audit_log.php';
 
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? 'user') !== 'admin') {
     header("Location: login.php");
@@ -9,8 +10,12 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? 'user') !== 'admin') {
 
 // Backup erstellen
 if (isset($_POST['create_backup'])) {
-    exec('bash ' . __DIR__ . '/backup.sh 2>&1', $output, $return);
-    $backup_message = $return === 0 ? "Backup erfolgreich erstellt!" : "Backup fehlgeschlagen!";
+    $backup_script = __DIR__ . '/scripts/backup.sh';
+    exec('bash ' . escapeshellarg($backup_script) . ' 2>&1', $output, $return);
+    $backup_message = $return === 0
+        ? "Backup erfolgreich erstellt!"
+        : "Backup fehlgeschlagen: " . htmlspecialchars(implode(' | ', $output));
+    audit_log($PDO, 'BACKUP', 'system', 0, null, ['status' => $return === 0 ? 'success' : 'failed']);
 }
 
 // Statistiken
@@ -46,7 +51,7 @@ include 'includes/header.php';
     </h2>
 
     <?php if (isset($backup_message)): ?>
-        <div class="alert alert-success"><?= $backup_message ?></div>
+        <div class="alert <?= str_starts_with($backup_message, 'Backup erfolgreich') ? 'alert-success' : 'alert-danger' ?>"><?= $backup_message ?></div>
     <?php endif; ?>
 
     <!-- Quick Actions -->
@@ -97,6 +102,10 @@ include 'includes/header.php';
                     </button>
                 </form>
 
+                <a href="backup_management.php" class="action-btn btn-primary-modern w-100 mb-3">
+                    <i class="fas fa-folder-open me-2"></i>Backup-Verwaltung öffnen
+                </a>
+
                 <h5 class="mb-2">Letzte Backups:</h5>
                 <?php if (!empty($backups)): ?>
                     <div class="list-group">
@@ -129,6 +138,9 @@ include 'includes/header.php';
                 <h4 class="mb-3"><i class="fas fa-tools me-2"></i>System-Tools</h4>
                 
                 <div class="d-grid gap-2">
+                    <a href="gsoffice_import.php" class="action-btn" style="background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%); color: white;">
+                        <i class="fas fa-file-import me-2"></i>GSOffice Import
+                    </a>
                     <a href="api_verwaltung.php" class="action-btn btn-primary-modern">
                         <i class="fas fa-key me-2"></i>API-Keys verwalten
                     </a>

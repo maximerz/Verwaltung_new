@@ -204,15 +204,15 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <style>
-        :root { --primary: linear-gradient(135deg, #C9A227 0%, #D4AF37 100%); }
-        body { background: linear-gradient(135deg, rgba(26,26,46,0.97) 0%, rgba(22,33,62,0.97) 50%); min-height: 100vh; padding: 20px; }
-        .container-main { max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 25px; }
+        :root { --primary: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%); }
+        body { background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%); min-height: 100vh; padding: 20px; }
+        .container-main { max-width: 1400px; margin: 0 auto; background: rgba(255,255,255,0.98); padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(20,184,166,0.15); border: 2px solid rgba(20,184,166,0.1); }
         h1, h2, h3 { background: var(--primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; }
-        .section-card { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #C9A227; }
+        .section-card { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #14b8a6; }
         .position-card { background: #fff; padding: 20px; border-radius: 10px; margin-bottom: 15px; border: 2px solid #e9ecef; }
         .btn-primary { background: var(--primary); border: none; }
-        .signature-pad { border: 2px solid #C9A227; border-radius: 10px; cursor: crosshair; }
-        .camera-preview { max-width: 100%; border: 2px dashed #C9A227; border-radius: 10px; min-height: 200px; }
+        .signature-pad { border: 2px solid #14b8a6; border-radius: 10px; cursor: crosshair; }
+        .camera-preview { max-width: 100%; border: 2px dashed #14b8a6; border-radius: 10px; min-height: 200px; }
     </style>
     <?php include 'includes/table-style.php'; ?>
 </head>

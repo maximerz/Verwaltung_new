@@ -61,10 +61,10 @@ $customers = $stmt->fetchAll();
     <title>DSGVO & Datenschutz - ERP System</title>
     <style>
         :root {
-            --primary: linear-gradient(135deg, #C9A227 0%, #D4AF37 100%);
+            --primary: linear-gradient(135deg, #5B7DB1 0%, #D4AF37 100%);
             --shadow: 0 15px 50px rgba(201,162,39,0.15);
         }
-        body { font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, rgba(26,26,46,0.97) 0%, rgba(22,33,62,0.97) 50%, rgba(30,30,50,0.97) 100%); min-height: 100vh; }
+        body { font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 20px; background: #F0F2F5; min-height: 100vh; }
         .container { max-width: 1400px; margin: 0 auto; background: rgba(255,255,255,0.98); padding: 30px; border-radius: 25px; box-shadow: var(--shadow); border: 2px solid rgba(255,255,255,0.3); }
         .header { text-align: center; margin-bottom: 30px; }
         h1, h2, h3 { background: var(--primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700; }
@@ -78,7 +78,7 @@ $customers = $stmt->fetchAll();
         .tab.active { background: var(--primary); color: white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .section { margin: 30px 0; padding: 20px; background: rgba(201,162,39,0.05); border-radius: 15px; border-left: 5px solid #C9A227; }
+        .section { margin: 30px 0; padding: 20px; background: rgba(201,162,39,0.05); border-radius: 15px; border-left: 5px solid #5B7DB1; }
         .table { width: 100%; border-collapse: collapse; margin: 20px 0; border-radius: 15px; overflow: hidden; }
         .table th, .table td { border: 1px solid #e9ecef; padding: 12px; text-align: left; font-size: 0.9em; }
         .table th { background: var(--primary); color: white; font-weight: 600; }

@@ -15,6 +15,8 @@ if ($_POST) {
     $firmenname = $_POST['firmenname'] ?? '';
     $strasse = $_POST['strasse'] ?? '';
     $ort = $_POST['ort'] ?? '';
+    $hinweise = $_POST['hinweise'] ?? '';
+    $konditionen = $_POST['konditionen'] ?? '';
 
     if (!empty($vorname) && !empty($nachname) && !empty($email) && !empty($firmenname) && !empty($strasse) && !empty($ort)) {
         try {
@@ -38,8 +40,8 @@ if ($_POST) {
             $kundennummer = ($max_result['max_nr'] ?? 0) + 1;
             
             // Kunde erstellen
-            $stmt_create_customer = $PDO->prepare("INSERT INTO kundensystem (kundennummer, vorname, nachname, email, firma_id) VALUES (?, ?, ?, ?, ?)");
-            $stmt_create_customer->execute([$kundennummer, $vorname, $nachname, $email, $firma_id]);
+            $stmt_create_customer = $PDO->prepare("INSERT INTO kundensystem (kundennummer, vorname, nachname, email, firma_id, hinweise, konditionen) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt_create_customer->execute([$kundennummer, $vorname, $nachname, $email, $firma_id, $hinweise, $konditionen]);
 
             $success = "Kunde erfolgreich erstellt!";
         } catch (Exception $e) {
@@ -96,6 +98,26 @@ if ($_POST) {
             <div class="col-12">
                 <label class="form-label"><i class="fas fa-map-marker-alt me-1"></i>Ort</label>
                 <input type="text" class="form-control" name="ort" placeholder="z.B. 12345 Musterstadt" required>
+            </div>
+        </div>
+
+        <hr class="my-4">
+        <h5 class="mb-3"><i class="fas fa-sticky-note me-2"></i>Hinweise</h5>
+        
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="form-label">Hinweise zum Kunden</label>
+                <textarea class="form-control" name="hinweise" rows="3" placeholder="Optionale Hinweise..."></textarea>
+            </div>
+        </div>
+        
+        <hr class="my-4">
+        <h5 class="mb-3"><i class="fas fa-handshake me-2"></i>Konditionen</h5>
+        
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="form-label">Kundenspezifische Konditionen</label>
+                <textarea class="form-control" name="konditionen" rows="3" placeholder="z.B. ServicePlus, Event-Rabatt..."></textarea>
             </div>
         </div>
         

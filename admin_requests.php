@@ -2,141 +2,109 @@
 session_start();
 require_once 'db_connection.php';
 
-// Prüfen ob Admin eingeloggt ist
 if (!isset($_SESSION['user_id']) || (($_SESSION['role'] ?? 'user') !== 'admin' && !($_SESSION['can_manage_users'] ?? 0))) {
     header("Location: login.php");
     exit();
 }
 
-// Anfrage bearbeiten
 if ($_POST) {
     $request_id = $_POST['request_id'] ?? null;
     $action = $_POST['action'] ?? null;
-    
+
     if ($request_id && $action) {
         if ($action === 'approve') {
-            // Benutzer aus Anfrage erstellen
             $stmt = $PDO->prepare("SELECT username, password FROM user_requests WHERE id = ?");
             $stmt->execute([$request_id]);
             $request = $stmt->fetch();
-            
+
             if ($request) {
-                // Benutzer erstellen
                 $stmt = $PDO->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, 'user')");
                 $stmt->execute([$request['username'], $request['password']]);
-                
-                // Anfrage löschen
+
                 $stmt = $PDO->prepare("DELETE FROM user_requests WHERE id = ?");
                 $stmt->execute([$request_id]);
-                
-                $message = "Benutzer erfolgreich genehmigt!";
+
+                $message = "Benutzer erfolgreich genehmigt.";
             }
         } elseif ($action === 'reject') {
-            // Anfrage ablehnen
             $stmt = $PDO->prepare("DELETE FROM user_requests WHERE id = ?");
             $stmt->execute([$request_id]);
-            
-            $message = "Anfrage abgelehnt!";
+            $message = "Anfrage abgelehnt.";
         }
     }
 }
 
-// Alle offenen Anfragen laden
 $stmt = $PDO->prepare("SELECT * FROM user_requests WHERE status = 'pending' ORDER BY created_at DESC");
 $stmt->execute();
 $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
-
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Benutzeranfragen - Admin</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #8b1538 0%, #a91b47 100%);
-            min-height: 100vh;
-            padding: 20px 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .container-main {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-        .header-title {
-            background: linear-gradient(135deg, #8b1538 0%, #a91b47 100%);
-            color: white;
-            padding: 40px;
-            border-radius: 15px 15px 0 0;
-            margin: -30px -30px 30px -30px;
-        }
-        .table thead {
-            background: linear-gradient(135deg, #8b1538 0%, #a91b47 100%);
-            color: white;
-        }
-        .btn-success {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            border: none;
-        }
-        .btn-danger {
-            background: linear-gradient(135deg, #dc3545 0%, #e91e63 100%);
-            border: none;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Benutzeranfragen - Projekt1 ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/global.css">
+    <script>
+        document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+    </script>
 </head>
-<body>
-    <div class="container">
-        <div class="container-main">
-            <div class="header-title">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1><i class="fas fa-users-cog"></i> Benutzeranfragen</h1>
-                        <p class="mb-0">Verwaltung von Registrierungsanfragen</p>
-                    </div>
-                    <div>
-                        <a href="web_oberflaeche.php" class="btn btn-light">
-                            <i class="fas fa-arrow-left"></i> Zurück
-                        </a>
-                    </div>
+<body class="admin-standalone">
+    <div class="admin-shell">
+        <div class="surface-card p-4 p-md-5 slide-up">
+            <div class="admin-topbar">
+                <div>
+                    <span class="page-kicker"><i class="fas fa-user-cog"></i>Admin Inbox</span>
+                    <h1 class="mt-3 mb-2">Benutzeranfragen</h1>
+                    <p>Offene Registrierungsanfragen zentral prüfen, genehmigen oder ablehnen.</p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="web_oberflaeche.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i>Zurück</a>
+                    <button type="button" class="theme-toggle" onclick="toggleAdminTheme()">
+                        <i class="fas fa-moon" id="adminThemeIcon"></i>
+                        <span>Theme</span>
+                    </button>
                 </div>
             </div>
 
             <?php if (isset($message)): ?>
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i> <?php echo $message; ?>
-                </div>
+                <div class="alert alert-success mb-4"><i class="fas fa-check-circle me-2"></i><?= htmlspecialchars($message) ?></div>
             <?php endif; ?>
 
-            <div class="table-responsive">
-                <table class="table table-hover">
+            <div class="modern-table">
+                <table class="table table-hover mb-0">
                     <thead>
                         <tr>
-                            <th><i class="fas fa-user"></i> Benutzername</th>
-                            <th><i class="fas fa-calendar"></i> Angefragt am</th>
-                            <th><i class="fas fa-tools"></i> Aktionen</th>
+                            <th><i class="fas fa-user me-2"></i>Benutzername</th>
+                            <th><i class="fas fa-calendar me-2"></i>Angefragt am</th>
+                            <th><i class="fas fa-sliders me-2"></i>Aktionen</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (count($requests) > 0): ?>
-                            <?php foreach($requests as $request): ?>
+                            <?php foreach ($requests as $request): ?>
                                 <tr>
-                                    <td><strong><?php echo htmlspecialchars($request['username']); ?></strong></td>
-                                    <td><?php echo date('d.m.Y H:i', strtotime($request['created_at'])); ?></td>
                                     <td>
-                                        <form method="POST" style="display: inline;">
-                                            <input type="hidden" name="request_id" value="<?php echo $request['id']; ?>">
-                                            <button type="submit" name="action" value="approve" class="btn btn-success btn-sm me-2">
-                                                <i class="fas fa-check"></i> Genehmigen
+                                        <div class="d-flex align-items-center gap-3">
+                                            <span class="user-avatar"><?= strtoupper(substr($request['username'], 0, 1)) ?></span>
+                                            <strong><?= htmlspecialchars($request['username']) ?></strong>
+                                        </div>
+                                    </td>
+                                    <td><?= date('d.m.Y H:i', strtotime($request['created_at'])) ?></td>
+                                    <td>
+                                        <form method="POST" class="d-flex gap-2 flex-wrap">
+                                            <input type="hidden" name="request_id" value="<?= (int) $request['id'] ?>">
+                                            <button type="submit" name="action" value="approve" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-check"></i>Genehmigen
                                             </button>
-                                            <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm" 
-                                                    onclick="return confirm('Anfrage wirklich ablehnen?')">
-                                                <i class="fas fa-times"></i> Ablehnen
+                                            <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm" onclick="return confirm('Anfrage wirklich ablehnen?')">
+                                                <i class="fas fa-xmark"></i>Ablehnen
                                             </button>
                                         </form>
                                     </td>
@@ -144,8 +112,11 @@ $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="3" class="text-center text-muted py-4">
-                                    <i class="fas fa-inbox"></i> Keine offenen Anfragen
+                                <td colspan="3">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                                        <p class="mb-0">Keine offenen Anfragen vorhanden.</p>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endif; ?>
@@ -154,5 +125,24 @@ $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
     </div>
+
+    <script>
+        function toggleAdminTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('theme', nextTheme);
+            syncThemeIcon();
+        }
+
+        function syncThemeIcon() {
+            const icon = document.getElementById('adminThemeIcon');
+            if (icon) {
+                icon.className = document.documentElement.getAttribute('data-theme') === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', syncThemeIcon);
+    </script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'db_connection.php';
+require_once 'includes/document_templates.php';
 
 $lieferschein_id = $_GET['id'] ?? '';
 
@@ -47,6 +48,14 @@ try {
         $stmt->execute([$pos['id']]);
         $pos['seriennummern'] = $stmt->fetchAll();
     }
+
+    $template = get_document_template($PDO, 'lieferschein');
+    $template_vars = [
+        'kunde_name' => trim(($kunde['vorname'] ?? '') . ' ' . ($kunde['nachname'] ?? '')),
+        'dokument_nummer' => $lieferschein['lieferschein_nr'],
+        'datum' => date('d.m.Y', strtotime($lieferschein['datum'])),
+        'faelligkeit' => '',
+    ];
     
     $html = '
     <!DOCTYPE html>
@@ -56,14 +65,14 @@ try {
         <title>Lieferschein - ' . htmlspecialchars($lieferschein['lieferschein_nr']) . '</title>
         <style>
             body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-            .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #C9A227; padding-bottom: 20px; }
-            .info-box { background: #f8f9fa; padding: 15px; margin: 15px 0; border-left: 4px solid #C9A227; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid ' . htmlspecialchars($template['primary_color']) . '; padding-bottom: 20px; }
+            .info-box { background: #f8f9fa; padding: 15px; margin: 15px 0; border-left: 4px solid ' . htmlspecialchars($template['primary_color']) . '; }
             .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
             .table th, .table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-            .table th { background-color: #C9A227; color: white; }
+            .table th { background-color: ' . htmlspecialchars($template['primary_color']) . '; color: white; }
             .print-btn { margin: 20px 0; text-align: center; }
-            .print-btn button { background: #C9A227; color: white; border: none; padding: 15px 30px; font-size: 16px; cursor: pointer; border-radius: 5px; margin: 0 10px; }
-            .print-btn button:hover { background: #D4AF37; }
+            .print-btn button { background: ' . htmlspecialchars($template['primary_color']) . '; color: white; border: none; padding: 15px 30px; font-size: 16px; cursor: pointer; border-radius: 5px; margin: 0 10px; }
+            .print-btn button:hover { background: ' . htmlspecialchars($template['accent_color']) . '; }
             @media print { .print-btn { display: none; } }
             .signature { margin-top: 50px; }
             .signature img { max-width: 300px; border: 1px solid #ddd; }
@@ -77,12 +86,14 @@ try {
         </div>
         
         <div class="header">
-            <h1>📋 LIEFERSCHEIN</h1>
+            <h1>📋 ' . htmlspecialchars($template['header_title']) . '</h1>
             <h2>' . htmlspecialchars($lieferschein['lieferschein_nr']) . '</h2>
             <p><strong>Datum:</strong> ' . date('d.m.Y', strtotime($lieferschein['datum'])) . '</p>
+            <p><strong>' . htmlspecialchars($template['firmenname']) . '</strong><br>' . nl2br(htmlspecialchars($template['firmenadresse'])) . '</p>
         </div>
         
         <div class="info-box">
+            <p>' . render_document_template_html($template['intro_text'], $template_vars) . '</p>
             <h3>👤 Kunde:</h3>
             <p><strong>' . htmlspecialchars($kunde['vorname'] . ' ' . $kunde['nachname']) . '</strong></p>
             <p>' . htmlspecialchars($kunde['firmenname'] ?? '') . '</p>
@@ -143,7 +154,7 @@ try {
     
     $html .= '
         <div style="margin-top: 50px; text-align: center; border-top: 1px solid #ddd; padding-top: 20px;">
-            <p><strong>Vielen Dank für Ihr Vertrauen!</strong></p>
+            <p><strong>' . render_document_template_html($template['footer_text'], $template_vars) . '</strong></p>
         </div>
     </body>
     </html>';

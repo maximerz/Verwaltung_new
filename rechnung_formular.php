@@ -110,18 +110,18 @@ $mwst_satz = 19;
     <title>Rechnung <?= $rechnung_id ? 'bearbeiten' : 'erstellen' ?> - ERP System</title>
     <style>
         :root {
-            --primary: linear-gradient(135deg, #C9A227 0%, #D4AF37 100%);
+            --primary: linear-gradient(135deg, #5B7DB1 0%, #D4AF37 100%);
             --shadow: 0 15px 50px rgba(201,162,39,0.15);
         }
-        body { font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, rgba(26,26,46,0.97) 0%, rgba(22,33,62,0.97) 50%, rgba(30,30,50,0.97) 100%); min-height: 100vh; }
+        body { font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 20px; background: #F0F2F5; min-height: 100vh; }
         .container { max-width: 1000px; margin: 0 auto; background: rgba(255,255,255,0.98); padding: 30px; border-radius: 25px; box-shadow: var(--shadow); border: 2px solid rgba(255,255,255,0.3); }
         .header { text-align: center; margin-bottom: 30px; }
         h1, h2 { background: var(--primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700; }
-        .form-section { background: rgba(201,162,39,0.1); padding: 20px; border-radius: 15px; margin: 20px 0; border-left: 5px solid #C9A227; }
+        .form-section { background: rgba(201,162,39,0.1); padding: 20px; border-radius: 15px; margin: 20px 0; border-left: 5px solid #5B7DB1; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 12px; transition: all 0.3s ease; }
-        .form-group input:focus { border-color: #C9A227; outline: none; box-shadow: 0 0 0 0.2rem rgba(201,162,39,0.25); }
+        .form-group input:focus { border-color: #5B7DB1; outline: none; box-shadow: 0 0 0 0.2rem rgba(201,162,39,0.25); }
         .btn { background: var(--primary); color: white; padding: 12px 24px; border: none; border-radius: 50px; cursor: pointer; margin: 5px; text-decoration: none; display: inline-block; font-weight: 600; transition: all 0.3s ease; }
         .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
         .btn-secondary { background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); }

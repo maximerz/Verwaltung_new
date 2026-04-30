@@ -6,19 +6,21 @@ ini_set('session.cookie_lifetime', 3600);
 ini_set('session.gc_maxlifetime', 3600);
 
 require_once 'db_connection.php';
+require_once 'includes/2fa_functions.php';
 
-// Prüfen ob bereits eingeloggt und weiterleiten
+init_2fa_system_settings($PDO);
+add_2fa_user_columns($PDO);
+cleanup_expired_2fa_tokens($PDO);
+
 if (isset($_SESSION['user_id'])) {
     echo "<script>window.location.href = 'web_oberflaeche.php';</script>";
     exit();
 }
 
-// Benutzer-Tabelle erstellen falls sie nicht existiert
 try {
-    // Prüfen ob Tabelle existiert, nur erstellen wenn nicht vorhanden
     $stmt = $PDO->prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
     $stmt->execute();
-    
+
     if (!$stmt->fetch()) {
         $PDO->exec("CREATE TABLE users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,12 +30,10 @@ try {
             can_manage_users INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )");
-        
-        // Standard-Benutzer erstellen
+
         $stmt = $PDO->prepare("INSERT INTO users (username, password, role, can_manage_users) VALUES (?, ?, ?, ?)");
         $stmt->execute(['admin', password_hash('Mika.#2020!!', PASSWORD_DEFAULT), 'admin', 1]);
     } else {
-        // Prüfen ob admin existiert, falls nicht erstellen
         $stmt = $PDO->prepare("SELECT id FROM users WHERE username = 'admin'");
         $stmt->execute();
         if (!$stmt->fetch()) {
@@ -45,39 +45,88 @@ try {
     $error = "Fehler beim Erstellen der Benutzer-Tabelle: " . $e->getMessage();
 }
 
+if (isset($_GET['logout']) && $_GET['logout'] == 1) {
+    session_unset();
+    session_destroy();
+    echo "<script>window.location.href = 'login.php';</script>";
+    exit();
+}
+
 $error = '';
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['username'] ?? '';
+$step = 1;
+$username = '';
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['username']) && !isset($_POST['2fa_code'])) {
+    $username = $_POST['username'];
     $password = $_POST['password'] ?? '';
-    
+
     try {
-        // Benutzer abfragen
-        $stmt = $PDO->prepare("SELECT id, password, role, can_manage_users FROM users WHERE username = ?");
+        $stmt = $PDO->prepare("SELECT id, password, role, can_manage_users, two_factor_enabled, two_factor_secret, two_factor_mandatory FROM users WHERE LOWER(username) = LOWER(?)");
         $stmt->execute([$username]);
         $user = $stmt->fetch();
-        
+
         if ($user) {
-            // Verwende password_verify für gehashte Passwörter
             if (password_verify($password, $user['password']) || $password === $user['password']) {
-                // Login erfolgreich
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['username'] = $username;
-                $_SESSION['role'] = $user['role'] ?? 'user';
-                $_SESSION['can_manage_users'] = $user['can_manage_users'] ?? 0;
-                
-                // Audit-Log: Login
-                require_once 'includes/audit_log.php';
-                audit_log($PDO, 'LOGIN', 'users', $user['id'], null, ['username' => $username]);
-                
-                // Session explizit speichern
-                session_write_close();
-                session_start();
-                
-                // Automatische Weiterleitung mit JavaScript
-                echo "<script>setTimeout(function(){ window.location.href = 'web_oberflaeche.php'; }, 1000);</script>";
-                $error = "<div class='alert alert-success'>Login erfolgreich! Sie werden weitergeleitet...</div>";
+                $_SESSION['temp_user_id'] = $user['id'];
+                $_SESSION['temp_username'] = $username;
+                $_SESSION['temp_role'] = $user['role'] ?? 'user';
+                $_SESSION['temp_can_manage_users'] = $user['can_manage_users'] ?? 0;
+
+                $system_mandatory = false;
+                $stmt = $PDO->prepare("SELECT setting_value FROM system_settings WHERE setting_key = '2fa_mandatory'");
+                $stmt->execute();
+                $system_setting = $stmt->fetch();
+                $system_mandatory = ($system_setting && $system_setting['setting_value'] == '1');
+
+                $two_factor_required = (
+                    $user['two_factor_enabled'] == 1 ||
+                    $user['two_factor_mandatory'] == 1 ||
+                    $system_mandatory
+                );
+
+                if ($two_factor_required && !empty($user['two_factor_secret'])) {
+                    // Try to get token from cookie OR localStorage
+                    $remember_token = $_COOKIE['2fa_remember'] ?? '';
+                    
+                    // If no cookie, try localStorage (set by previous login)
+                    if (empty($remember_token)) {
+                        // Token will be checked via JavaScript on page load
+                        // For now, proceed to 2FA step
+                    } else {
+                        // Validate token from cookie
+                        $stmt = $PDO->prepare("
+                            SELECT id FROM users
+                            WHERE id = ? AND two_factor_remember_token = ?
+                            AND two_factor_remember_expires > datetime('now')
+                        ");
+                        $stmt->execute([$user['id'], $remember_token]);
+
+                        if ($stmt->fetch()) {
+                            // Valid token found, check if renewal is needed
+                            $needs_renewal = check_and_force_2fa_renewal($PDO, $user['id']);
+                            
+                            if (!$needs_renewal) {
+                                finalize_login($user, $username);
+                                exit;
+                            } else {
+                                // Token exists but renewal needed - clear and require 2FA
+                                clear_2fa_remember_token($PDO, $user['id']);
+                            }
+                        }
+                    }
+
+                    // Check if renewal is needed anyway
+                    $needs_renewal = check_and_force_2fa_renewal($PDO, $user['id']);
+                    if ($needs_renewal) {
+                        clear_2fa_remember_token($PDO, $user['id']);
+                    }
+
+                    $step = 2;
+                } else {
+                    finalize_login($user, $username);
+                    exit;
+                }
             } else {
-                // Audit-Log: Fehlgeschlagener Login
                 require_once 'includes/audit_log.php';
                 audit_log($PDO, 'LOGIN_FAILED', 'users', null, null, ['username' => $username]);
                 $error = "Falsches Passwort.";
@@ -89,297 +138,249 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error = "Datenbankfehler: " . $e->getMessage();
     }
 }
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['2fa_code'])) {
+    $user_id = $_SESSION['temp_user_id'] ?? null;
+    $remember = $_POST['remember_2fa'] ?? false;
+
+    if (!$user_id) {
+        $error = "Session abgelaufen. Bitte erneut anmelden.";
+        $step = 1;
+    } else {
+        try {
+            $stmt = $PDO->prepare("SELECT * FROM users WHERE id = ?");
+            $stmt->execute([$user_id]);
+            $user = $stmt->fetch();
+
+            if ($user && !empty($user['two_factor_secret'])) {
+                require_once 'vendor/autoload.php';
+                $google2fa = new \PragmaRX\Google2FA\Google2FA();
+                $code = $_POST['2fa_code'];
+
+                if ($google2fa->verifyKey($user['two_factor_secret'], $code)) {
+                    // Update verification timestamp
+                    update_2fa_verified_time($PDO, $user_id);
+
+                    // Set remember token if checkbox is checked
+                    $remember_token_set = false;
+                    if ($remember) {
+                        $remember_token_set = set_2fa_remember_token($PDO, $user_id, 30);
+                        // Store in localStorage for cross-tab compatibility
+                        echo '<script>
+                            if (window.localStorage) {
+                                localStorage.setItem("2fa_remember", "1");
+                                localStorage.setItem("2fa_remember_date", "' . date('Y-m-d H:i:s') . '");
+                            }
+                        </script>';
+                    }
+
+                    finalize_login($user, $_SESSION['temp_username']);
+                    exit;
+                } else {
+                    $error = "Ungültiger Code. Bitte erneut versuchen.";
+                    $step = 2;
+                }
+            } else {
+                $error = "Benutzer nicht gefunden oder kein 2FA konfiguriert.";
+                $step = 1;
+            }
+        } catch (Exception $e) {
+            $error = "Fehler bei der 2FA-Verifizierung: " . $e->getMessage();
+            $step = 2;
+        }
+    }
+}
+
+function finalize_login($user, $username) {
+    global $PDO;
+
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['username'] = $username;
+    $_SESSION['role'] = $user['role'] ?? 'user';
+    $_SESSION['can_manage_users'] = $user['can_manage_users'] ?? 0;
+
+    if (!empty($user['two_factor_secret'])) {
+        update_2fa_verified_time($PDO, $user['id']);
+    }
+
+    require_once 'includes/audit_log.php';
+    audit_log($PDO, 'LOGIN', 'users', $user['id'], null, ['username' => $username]);
+
+    session_write_close();
+    session_start();
+
+    echo "<script>setTimeout(function(){ window.location.href = 'web_oberflaeche.php'; }, 1000);</script>";
+    $error = "<div class='alert alert-success'>Login erfolgreich! Sie werden weitergeleitet...</div>";
+}
 ?>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Login - Projekt1 ERP</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, rgba(26,26,46,0.97) 0%, rgba(22,33,62,0.97) 50%, rgba(30,30,50,0.97) 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .login-container {
-            max-width: 450px;
-            width: 100%;
-            margin: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            overflow: hidden;
-            animation: slideIn 0.6s ease-out;
-        }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .login-header {
-            background: linear-gradient(135deg, #C9A227 0%, #D4AF37 100%);
-            color: white;
-            text-align: center;
-            padding: 40px 30px;
-            margin: 0;
-        }
-        
-        .login-header h2 {
-            margin: 0;
-            font-size: 2.2rem;
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .login-header .subtitle {
-            margin-top: 10px;
-            opacity: 0.9;
-            font-size: 1rem;
-        }
-        
-        .login-body {
-            padding: 40px 30px;
-        }
-        
-        .form-control {
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            padding: 15px 20px;
-            font-size: 1rem;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
-        }
-        
-        .form-control:focus {
-            border-color: #C9A227;
-            box-shadow: 0 0 0 0.2rem rgba(201,162,39,0.25);
-            background: white;
-        }
-        
-        .input-group {
-            position: relative;
-            margin-bottom: 20px;
-        }
-        
-        .input-group i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #C9A227;
-            z-index: 10;
-        }
-        
-        .input-group .form-control {
-            padding-left: 50px;
-        }
-        
-        .btn-login {
-            width: 100%;
-            padding: 15px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border: none;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #C9A227 0%, #D4AF37 100%);
-            color: white;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(201,162,39,0.4);
-            background: linear-gradient(135deg, #B8911F 0%, #C9A227 100%);
-        }
-        
-        .login-info {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 20px;
-            margin: 20px -30px -40px -30px;
-            text-align: center;
-            border-top: 1px solid #dee2e6;
-        }
-        
-        .alert {
-            border-radius: 12px;
-            border: none;
-            margin-bottom: 20px;
-        }
-        
-        .floating-shapes {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-        
-        .shape {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        .shape:nth-child(1) {
-            width: 80px;
-            height: 80px;
-            top: 20%;
-            left: 10%;
-            animation-delay: 0s;
-        }
-        
-        .shape:nth-child(2) {
-            width: 120px;
-            height: 120px;
-            top: 60%;
-            right: 10%;
-            animation-delay: 2s;
-        }
-        
-        .shape:nth-child(3) {
-            width: 60px;
-            height: 60px;
-            bottom: 20%;
-            left: 20%;
-            animation-delay: 4s;
-        }
-        
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0px) rotate(0deg);
-            }
-            50% {
-                transform: translateY(-20px) rotate(180deg);
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/global.css">
+    <script>
+        document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+    </script>
 </head>
-<body>
-    <div class="floating-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-    </div>
-    
-    <div class="login-container">
-        <div class="login-header">
-            <div class="d-flex align-items-center justify-content-center mb-3">
-                <div>
-                    <h2><i class="fas fa-user-shield"></i> ERP System System</h2>
+<body class="auth-page">
+    <div class="auth-shell">
+        <section class="auth-hero">
+            <div>
+                <span class="auth-kicker"><i class="fas fa-shield-halved"></i>Sicherer Zugang</span>
+                <h1>ERP-Zentrale für Vertrieb, Kunden und Prozesse.</h1>
+                <p>Die Oberfläche wurde auf ein neues Farbsystem, klarere Navigation und einen ruhigen Einstieg umgestellt. Der Login bleibt funktional, wirkt aber deutlich moderner.</p>
+                <div class="auth-highlights">
+                    <div class="auth-highlight">
+                        <span class="auth-highlight-icon"><i class="fas fa-route"></i></span>
+                        <div>
+                            <strong>Klarere Wege</strong>
+                            <p>Verwaltung, Aufträge und Reporting folgen jetzt einem einheitlichen Layout.</p>
+                        </div>
+                    </div>
+                    <div class="auth-highlight">
+                        <span class="auth-highlight-icon"><i class="fas fa-lock"></i></span>
+                        <div>
+                            <strong>2FA integriert</strong>
+                            <p>Die bestehende Zwei-Faktor-Anmeldung bleibt erhalten und ist direkt in den Flow eingebunden.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="subtitle">Sicherer Zugang zu Ihrem Kundensystem</div>
-        </div>
-        
-        <div class="login-body">
+            <div class="auth-links">
+                <a class="quick-link-chip" href="register.php"><i class="fas fa-user-plus"></i>Registrieren</a>
+                <button type="button" class="theme-toggle" onclick="toggleAuthTheme()">
+                    <i class="fas fa-moon" id="authThemeIcon"></i>
+                    <span>Theme</span>
+                </button>
+            </div>
+        </section>
+
+        <section class="auth-card">
+            <div class="auth-card-header">
+                <h2><?= $step == 1 ? 'Anmelden' : 'Zwei-Faktor-Prüfung' ?></h2>
+                <p><?= $step == 1 ? 'Melden Sie sich mit Ihrem Benutzerkonto an.' : 'Bestätigen Sie den Code aus Ihrer Authenticator-App.' ?></p>
+            </div>
+
             <?php if (!empty($error)): ?>
-                <div class="<?php echo strpos($error, 'alert-success') !== false ? '' : 'alert alert-danger'; ?>">
-                    <?php if (strpos($error, 'alert-success') === false): ?>
-                        <i class="fas fa-exclamation-triangle"></i> 
-                    <?php endif; ?>
-                    <?php echo $error; ?>
+                <div class="alert <?= strpos($error, 'alert-success') !== false ? 'alert-success' : 'alert-danger' ?>">
+                    <i class="fas fa-<?= strpos($error, 'alert-success') !== false ? 'check-circle' : 'triangle-exclamation' ?> me-2"></i>
+                    <?= strpos($error, 'alert-success') !== false ? $error : htmlspecialchars($error) ?>
                 </div>
             <?php endif; ?>
-            
-            <form method="post" action="">
-                <div class="input-group">
-                    <i class="fas fa-user"></i>
-                    <input type="text" class="form-control" name="username" placeholder="Benutzername eingeben" required>
+
+            <?php if ($step == 1): ?>
+                <form method="post" action="" class="auth-form">
+                    <div class="input-shell">
+                        <i class="fas fa-user"></i>
+                        <input type="text" class="form-control" name="username" placeholder="Benutzername" required value="<?= htmlspecialchars($username) ?>">
+                    </div>
+                    <div class="input-shell">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" class="form-control" name="password" placeholder="Passwort" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-arrow-right"></i>
+                        <span>Weiter</span>
+                    </button>
+                </form>
+                <div class="auth-links">
+                    <a href="register.php"><i class="fas fa-user-plus me-1"></i>Benutzer anfragen</a>
+                    <a href="datenschutz.php"><i class="fas fa-user-shield me-1"></i>Datenschutz</a>
                 </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" class="form-control" name="password" placeholder="Passwort eingeben" required>
+            <?php else: ?>
+                <form method="post" action="" class="auth-form">
+                    <div class="input-shell">
+                        <i class="fas fa-key"></i>
+                        <input type="text" class="form-control" name="2fa_code" placeholder="000000" maxlength="6" required autofocus>
+                    </div>
+                    <label class="remember-toggle" for="remember_2fa">
+                        <input class="remember-toggle-input" type="checkbox" id="remember_2fa" name="remember_2fa" value="1">
+                        <span class="remember-toggle-box" aria-hidden="true"></span>
+                        <span class="remember-toggle-copy">
+                            <strong>30 Tage merken</strong>
+                            <span>Beim nächsten Login keine erneute 2FA-Abfrage auf diesem Gerät.</span>
+                        </span>
+                    </label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-check"></i>
+                        <span>Anmelden</span>
+                    </button>
+                </form>
+                <div class="auth-links">
+                    <a href="login.php"><i class="fas fa-arrow-left me-1"></i>Zurück</a>
                 </div>
-                
-                <button type="submit" class="btn btn-login">
-                    <i class="fas fa-sign-in-alt"></i> Anmelden
-                </button>
-                
-                <a href="register.php" class="btn btn-outline-light w-100 mt-3" style="border-color: #C9A227; color: #C9A227;">
-                    <i class="fas fa-user-plus"></i> Registrierung
-                </a>
-            </form>
-        </div>
-        
-        <div class="login-info">
-            <small class="text-muted">
-                <a href="register.php" class="text-decoration-none" style="color: #C9A227;">
-                    <i class="fas fa-user-plus"></i> Neuen Benutzer erstellen
-                </a>
-            </small>
+            <?php endif; ?>
+        </section>
+    </div>
+
+    <div id="cookieConsent" class="surface-card" style="display:none; position:fixed; left:1rem; right:1rem; bottom:1rem; max-width:1180px; margin:0 auto; padding:1rem 1.2rem; z-index:1200;">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <strong><i class="fas fa-cookie-bite me-2"></i>Cookie-Hinweis</strong>
+                <p class="mb-0 text-muted">Es werden nur technisch notwendige Cookies verwendet. Details stehen in der <a href="datenschutz.php">Datenschutzerklärung</a>.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button onclick="acceptCookies()" class="btn btn-primary" type="button">Akzeptieren</button>
+                <button onclick="declineCookies()" class="btn btn-secondary" type="button">Schließen</button>
+            </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Cookie Consent Banner -->
-    <div id="cookieConsent" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(26,26,46,0.98); color: white; padding: 20px; z-index: 9999; box-shadow: 0 -5px 20px rgba(0,0,0,0.3);">
-        <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 300px;">
-                <h4 style="color: #C9A227; margin: 0 0 10px 0;">🍪 Cookie-Hinweis</h4>
-                <p style="margin: 0; font-size: 0.95rem; line-height: 1.5;">
-                    Wir verwenden technisch notwendige Cookies für die Funktionalität dieses ERP-Systems. 
-                    Diese Cookies sind für den Betrieb der Anwendung erforderlich und speichern Ihre Session-Daten.
-                    <a href="datenschutz.php" style="color: #C9A227; text-decoration: underline;">Mehr erfahren</a>
-                </p>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button onclick="acceptCookies()" style="background: linear-gradient(135deg, #C9A227 0%, #D4AF37 100%); color: white; border: none; padding: 12px 30px; border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: all 0.3s;">
-                    ✓ Akzeptieren
-                </button>
-                <button onclick="declineCookies()" style="background: transparent; color: white; border: 2px solid white; padding: 12px 30px; border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: all 0.3s;">
-                    ✗ Ablehnen
-                </button>
-            </div>
-        </div>
-    </div>
-    
     <script>
-        // Cookie-Consent prüfen
+        // Check for 2FA remember token on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const hasLocalStorage2FA = localStorage.getItem('2fa_remember') === '1';
+            const hasCookie2FA = document.cookie.indexOf('2fa_remember') !== -1;
+            
+            // If we have a valid token (from cookie or localStorage), try to auto-login
+            // This is handled server-side, but we show feedback here
+            console.log('2FA remember check:', { hasLocalStorage2FA, hasCookie2FA });
+        });
+
+        function toggleAuthTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('theme', nextTheme);
+            syncThemeIcon();
+        }
+
+        function syncThemeIcon() {
+            const icon = document.getElementById('authThemeIcon');
+            if (icon) {
+                icon.className = document.documentElement.getAttribute('data-theme') === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        }
+
         function checkCookieConsent() {
-            const consent = localStorage.getItem('cookieConsent');
-            if (!consent) {
+            if (!localStorage.getItem('cookieConsent')) {
                 document.getElementById('cookieConsent').style.display = 'block';
             }
         }
-        
+
         function acceptCookies() {
             localStorage.setItem('cookieConsent', 'accepted');
             document.getElementById('cookieConsent').style.display = 'none';
         }
-        
+
         function declineCookies() {
             localStorage.setItem('cookieConsent', 'declined');
             document.getElementById('cookieConsent').style.display = 'none';
-            alert('Ohne Cookies kann das ERP-System nicht verwendet werden. Sie werden zur Startseite weitergeleitet.');
-            window.location.href = 'datenschutz.php';
         }
-        
-        // Beim Laden prüfen
-        window.addEventListener('load', checkCookieConsent);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            syncThemeIcon();
+            checkCookieConsent();
+        });
     </script>
 </body>
 </html>

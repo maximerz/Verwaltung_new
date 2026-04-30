@@ -1,3 +1,10 @@
 {
-    "php.debug.executablePath": "/usr/bin/php"
+    "php.debug.executablePath": "/usr/bin/php",
+    "workbench.editor.enablePreview": false,
+    "workbench.editor.enablePreviewFromQuickOpen": false,
+    "files.associations": {
+        ".htaccess": "apacheconf",
+        "*.conf": "apacheconf",
+        "*.service": "ini"
+    }
 }

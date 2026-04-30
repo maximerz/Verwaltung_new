@@ -80,8 +80,8 @@ if ($_POST && $confirmed === 'DELETE_CONFIRMED') {
     <meta charset="UTF-8">
     <title>Kunde löschen - ERP System</title>
     <style>
-        :root { --primary: linear-gradient(135deg, #C9A227 0%, #D4AF37 100%); --danger: linear-gradient(135deg, #EF5350 0%, #E53935 100%); --shadow: 0 15px 50px rgba(201,162,39,0.15); }
-        body { font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, rgba(26,26,46,0.97) 0%, rgba(22,33,62,0.97) 50%, rgba(30,30,50,0.97) 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        :root { --primary: linear-gradient(135deg, #5B7DB1 0%, #D4AF37 100%); --danger: linear-gradient(135deg, #EF5350 0%, #E53935 100%); --shadow: 0 15px 50px rgba(201,162,39,0.15); }
+        body { font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 20px; background: #F0F2F5; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
         .container { max-width: 700px; width: 100%; background: rgba(255,255,255,0.98); padding: 40px; border-radius: 25px; box-shadow: var(--shadow); }
         h1, h2 { background: var(--danger); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700; text-align: center; }
         .warning-box { background: #fff3cd; border-left: 5px solid #ffc107; padding: 20px; margin: 20px 0; border-radius: 10px; color: #856404; }

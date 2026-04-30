@@ -350,7 +350,7 @@ $success[] = "✓ Installation abgeschlossen!";
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, rgba(26,26,46,0.97) 0%, rgba(22,33,62,0.97) 100%);
+            background: #F0F2F5;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -366,7 +366,7 @@ $success[] = "✓ Installation abgeschlossen!";
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
         h1 {
-            background: linear-gradient(135deg, #C9A227 0%, #D4AF37 100%);
+            background: linear-gradient(135deg, #5B7DB1 0%, #D4AF37 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-size: 2.5rem;
@@ -399,7 +399,7 @@ $success[] = "✓ Installation abgeschlossen!";
         }
         .btn {
             display: inline-block;
-            background: linear-gradient(135deg, #C9A227 0%, #D4AF37 100%);
+            background: linear-gradient(135deg, #5B7DB1 0%, #D4AF37 100%);
             color: white;
             padding: 15px 30px;
             border-radius: 50px;

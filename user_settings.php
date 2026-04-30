@@ -96,30 +96,64 @@ $user = $stmt->fetch();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Benutzereinstellungen</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
     <style>
         :root {
-            --primary: #2563eb;
-            --bg-main: #f8fafc;
-            --bg-card: #ffffff;
-            --text-primary: #0f172a;
-            --text-secondary: #64748b;
-            --border: #e2e8f0;
+            --primary: #00D9C0;
+            --primary-hover: #00B8A3;
+            --primary-light: #E6FDF9;
+            --secondary: #FF6B6B;
+            --accent: #FFD93D;
+            
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --info: #3B82F6;
+            
+            --bg: #F8FAFC;
+            --bg-secondary: #F1F5F9;
+            --bg-card: #FFFFFF;
+            --text: #1E293B;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            
+            --gradient-primary: linear-gradient(135deg, #00D9C0 0%, #00B8A3 100%);
+            --shadow: 0 4px 15px rgba(0, 217, 192, 0.1);
         }
         
-            --primary: #3b82f6;
-            --bg-main: #0f172a;
-            --bg-card: #1e293b;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
+        [data-theme="dark"] {
+            --primary: #00D9C0;
+            --primary-hover: #00F5DC;
+            --primary-light: rgba(0, 217, 192, 0.15);
+            --secondary: #FF6B6B;
+            --accent: #FFD93D;
+            
+            --success: #34D399;
+            --warning: #FBBF24;
+            --danger: #F87171;
+            --info: #60A5FA;
+            
+            --bg: #0F172A;
+            --bg-secondary: #1E293B;
+            --bg-card: #1E293B;
+            --text: #F1F5F9;
+            --text-light: #94A3B8;
+            --text-muted: #64748B;
             --border: #334155;
+            --border-light: #1E293B;
+            
+            --gradient-primary: linear-gradient(135deg, #00D9C0 0%, #00B8A3 100%);
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
         
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--bg-main);
-            color: var(--text-primary);
+            background: var(--bg-secondary) !important;
+            color: var(--text) !important;
             transition: all 0.3s;
         }
         
@@ -130,41 +164,71 @@ $user = $stmt->fetch();
         }
         
         .settings-card {
-            background: var(--bg-card);
-            border-radius: 12px;
+            background: var(--bg-card) !important;
+            border-radius: 16px;
             padding: 2rem;
             margin-bottom: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow);
             border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        
+        .settings-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 217, 192, 0.15);
         }
         
         .settings-header {
-            font-size: 1.5rem;
-            font-weight: 600;
+            font-size: 1.75rem;
+            font-weight: 700;
             margin-bottom: 1.5rem;
-            color: var(--text-primary);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .form-label {
-            color: var(--text-primary);
-            font-weight: 500;
+            color: var(--text) !important;
+            font-weight: 600;
         }
         
         .form-control {
-            background: var(--bg-main);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
+            background: var(--bg-card) !important;
+            border: 2px solid var(--border) !important;
+            color: var(--text) !important;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
         }
         
         .form-control:focus {
-            background: var(--bg-card);
-            border-color: var(--primary);
-            color: var(--text-primary);
+            background: var(--bg-card) !important;
+            border-color: var(--primary) !important;
+            color: var(--text) !important;
+            box-shadow: 0 0 0 4px rgba(0, 217, 192, 0.15);
+            outline: none;
         }
         
         .btn-primary {
-            background: var(--primary);
+            background: var(--gradient-primary);
             border: none;
+            border-radius: 12px;
+            padding: 0.65rem 1.35rem;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 217, 192, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #64748B;
+            border: none;
+            border-radius: 12px;
+            color: white;
         }
         
         .toggle-switch {
@@ -187,7 +251,7 @@ $user = $stmt->fetch();
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ccc;
+            background-color: #64748B;
             transition: .4s;
             border-radius: 34px;
         }
@@ -205,7 +269,7 @@ $user = $stmt->fetch();
         }
         
         input:checked + .slider {
-            background-color: var(--primary);
+            background: var(--gradient-primary);
         }
         
         input:checked + .slider:before {
@@ -215,9 +279,18 @@ $user = $stmt->fetch();
         .qr-code {
             text-align: center;
             padding: 2rem;
-            background: var(--bg-main);
-            border-radius: 8px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
             margin: 1rem 0;
+        }
+        
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+        
+        h3.h5 {
+            color: var(--text) !important;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -237,17 +310,43 @@ $user = $stmt->fetch();
 
         <div class="settings-card">
             <h3 class="h5 mb-3"><i class="fas fa-moon me-2"></i>Darstellung</h3>
-            <form method="POST">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-muted mb-0">Dunkles Design aktivieren</p>
-                    </div>
-                    <label class="toggle-switch">
-                        <span class="slider"></span>
-                    </label>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="text-muted mb-0">Dunkles Design aktivieren</p>
                 </div>
-            </form>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
+
+        <script>
+            // Dark Mode Toggle Function
+            function toggleDarkMode() {
+                const toggle = document.getElementById('darkModeToggle');
+                const html = document.documentElement;
+                
+                if (toggle.checked) {
+                    html.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    html.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+            
+            // Check saved theme on page load
+            document.addEventListener('DOMContentLoaded', function() {
+                const savedTheme = localStorage.getItem('theme');
+                const toggle = document.getElementById('darkModeToggle');
+                
+                if (savedTheme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    if (toggle) toggle.checked = true;
+                }
+            });
+        </script>
 
         <!-- Passwort ändern -->
         <div class="settings-card">

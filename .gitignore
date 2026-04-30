@@ -17,10 +17,12 @@ composer.phar
 
 # Logs
 *.log
+nohup.out
 
 # IDE
 .vscode/
 .idea/
+.codex
 *.swp
 *.swo
 *~

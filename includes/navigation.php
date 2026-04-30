@@ -52,6 +52,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link <?= $current_page === 'konditionen_verwaltung.php' ? 'active' : '' ?>" href="konditionen_verwaltung.php">
+                        <i class="fas fa-handshake me-1"></i>Konditionen
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link <?= $current_page === 'reporting.php' ? 'active' : '' ?>" href="reporting.php">
                         <i class="fas fa-chart-bar me-1"></i>Reports
                     </a>
@@ -70,12 +75,13 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     <?= strtoupper(substr($username, 0, 1)) ?>
                 </div>
                 <div class="dropdown">
+                    <button class="btn btn-link text-decoration-none dropdown-toggle" type="button" data-bs-toggle="dropdown" style="color: var(--text-light); font-weight: 600;">
                         <?= htmlspecialchars($username) ?>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="user_settings.php"><i class="fas fa-cog me-2"></i>Einstellungen</a></li>
-                        <li><a class="dropdown-item" href="datenschutz.php"><i class="fas fa-shield-alt me-2"></i>Datenschutz</a></li>
                         <li><a class="dropdown-item" href="impressum.php"><i class="fas fa-info-circle me-2"></i>Impressum</a></li>
+                        <li><a class="dropdown-item" href="datenschutz.php"><i class="fas fa-shield-alt me-2"></i>Datenschutz</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <?php if ($logged_in): ?>
                             <li><a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>

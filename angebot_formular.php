@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'db_connection.php';
+require_once 'includes/audit_log.php';
 
 $kunde_id = $_GET['kunde_id'] ?? null;
 $angebot_id = $_GET['angebot_id'] ?? null;
@@ -40,19 +41,29 @@ if ($angebot_id) {
     }
 }
 
+// Konditionen-Vorlagen laden
+$stmt = $PDO->prepare("SELECT * FROM konditionen_vorlagen WHERE aktiv = 1 ORDER BY name");
+$stmt->execute();
+$konditionen_vorlagen = $stmt->fetchAll();
+
 if ($_POST) {
     try {
+        // Konditionen zusammenführen
+        $konditionen = $_POST['konditionen_custom'] ?? $_POST['konditionen'] ?? '';
+        
         if ($angebot_id) {
-            $stmt = $PDO->prepare("UPDATE bestellungen SET bestellungsname = ?, lieferzeit = ? WHERE idbestellung = ?");
-            $stmt->execute([$_POST['bestellungsname'], $_POST['lieferzeit'], $angebot_id]);
+            $stmt = $PDO->prepare("UPDATE bestellungen SET bestellungsname = ?, lieferzeit = ?, konditionen = ? WHERE idbestellung = ?");
+            $stmt->execute([$_POST['bestellungsname'], $_POST['lieferzeit'], $konditionen, $angebot_id]);
+            audit_log($PDO, 'UPDATE', 'bestellungen', $angebot_id, null, ['bestellungsname' => $_POST['bestellungsname'], 'lieferzeit' => $_POST['lieferzeit'], 'konditionen' => $konditionen]);
             $stmt = $PDO->prepare("DELETE FROM angebot_positionen WHERE angebot_id = ?");
             $stmt->execute([$angebot_id]);
         } else {
             $angebotsnummer = 'Angebot#' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
             $bestellnummer = 'B' . str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
-            $stmt = $PDO->prepare("INSERT INTO bestellungen (kundennummer, bestellungsnummer, bestellungsname, angebotsnummer, status, lieferzeit) VALUES (?, ?, ?, ?, 'angebot', ?)");
-            $stmt->execute([$kunde['kundennummer'], $bestellnummer, $_POST['bestellungsname'], $angebotsnummer, $_POST['lieferzeit']]);
+            $stmt = $PDO->prepare("INSERT INTO bestellungen (kundennummer, bestellungsnummer, bestellungsname, angebotsnummer, status, lieferzeit, konditionen) VALUES (?, ?, ?, ?, 'angebot', ?, ?)");
+            $stmt->execute([$kunde['kundennummer'], $bestellnummer, $_POST['bestellungsname'], $angebotsnummer, $_POST['lieferzeit'], $konditionen]);
             $angebot_id = $PDO->lastInsertId();
+            audit_log($PDO, 'INSERT', 'bestellungen', $angebot_id, null, ['angebotsnummer' => $angebotsnummer, 'kunde' => $kunde['kundennummer'], 'konditionen' => $konditionen]);
         }
         
         $gesamtsumme = 0;
@@ -116,42 +127,43 @@ $produkte_list = $stmt_prod->fetchAll();
 
 <style>
 .position-row {
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    background: var(--bg-card);
     padding: 1.5rem;
     border-radius: 12px;
     margin-bottom: 1rem;
-    border: 2px solid #e9ecef;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
     transition: all 0.3s;
 }
 .position-row:hover {
-    border-color: #C9A227;
-    box-shadow: 0 4px 8px rgba(201,162,39,0.1);
+    border-color: var(--primary);
+    box-shadow: 0 4px 16px rgba(0, 217, 192, 0.15);
 }
 .artikel-container { position: relative; }
 .artikel-dropdown {
     position: absolute;
     z-index: 1000;
-    background: white;
-    border: 2px solid #C9A227;
-    border-radius: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
     max-height: 300px;
     overflow-y: auto;
     width: 100%;
     display: none;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     margin-top: 4px;
 }
 .artikel-option {
     padding: 0.75rem 1rem;
     cursor: pointer;
     transition: all 0.2s;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
 }
 .artikel-option:last-child { border-bottom: none; }
 .artikel-option:hover {
-    background: linear-gradient(135deg, #C9A227 0%, #D4AF37 100%);
-    color: white;
+    background: var(--primary-light);
+    color: var(--primary);
 }
 .form-row {
     display: grid;
@@ -164,19 +176,21 @@ $produkte_list = $stmt_prod->fetchAll();
 }
 .form-label {
     font-weight: 600;
-    color: #495057;
+    color: var(--text);
     margin-bottom: 0.5rem;
     display: block;
 }
 .form-control, .form-select {
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
     padding: 0.75rem;
     transition: all 0.3s;
+    background: var(--bg-card);
+    color: var(--text);
 }
 .form-control:focus, .form-select:focus {
-    border-color: #C9A227;
-    box-shadow: 0 0 0 0.2rem rgba(201,162,39,0.25);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 217, 192, 0.15);
     outline: none;
 }
 </style>
@@ -185,6 +199,28 @@ $produkte_list = $stmt_prod->fetchAll();
     <h2 class="section-title mb-4">
         <i class="fas fa-file-invoice me-2"></i><?= $angebot_id ? 'Angebot bearbeiten' : 'Neues Angebot erstellen' ?>
     </h2>
+
+    <?php if ($kunde && !empty($kunde['konditionen'])): ?>
+    <!-- Modal für Konditionen-Hinweis -->
+    <div class="modal fade show" id="konditionenModal" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Hinweis: Kunde hat Konditionen</h5>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Gespeicherte Konditionen für diesen Kunden:</strong></p>
+                    <p class="mb-0"><?= nl2br(htmlspecialchars($kunde['konditionen'])) ?></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="document.getElementById('konditionenModal').style.display='none'">
+                        <i class="fas fa-check me-2"></i>OK, verstanden
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <?php if ($kunde): ?>
     <div class="alert alert-info mb-4">
@@ -205,6 +241,31 @@ $produkte_list = $stmt_prod->fetchAll();
                 <input type="number" class="form-control" name="lieferzeit" value="<?= $angebot['lieferzeit'] ?? '14' ?>" min="1" required>
             </div>
         </div>
+
+        <?php if ($kunde): ?>
+        <?php if (!empty($konditionen_vorlagen) || !empty($kunde['konditionen'])): ?>
+        <div class="row mb-4">
+            <div class="col-12">
+                <label class="form-label"><i class="fas fa-handshake me-1"></i>Konditionen</label>
+                <select class="form-select" name="konditionen" id="konditionen-select">
+                    <option value="">-- Keine Konditionen --</option>
+                    <?php if (!empty($kunde['konditionen'])): ?>
+                    <option value="<?= htmlspecialchars($kunde['konditionen']) ?>" selected><?= htmlspecialchars($kunde['konditionen']) ?></option>
+                    <?php endif; ?>
+                    <?php foreach($konditionen_vorlagen as $kv): ?>
+                    <option value="<?= htmlspecialchars($kv['name']) ?>" <?= ($angebot['konditionen'] ?? '') === $kv['name'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($kv['name']) ?>
+                        <?php if($kv['rabatt_prozent'] > 0): ?> (<?= $kv['rabatt_prozent'] ?>% Rabatt)<?php endif; ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+                <div class="mt-2">
+                    <input type="text" class="form-control" name="konditionen_custom" id="konditionen-custom" placeholder="Oder eigene Konditionen eingeben..." value="<?= ($angebot['konditionen'] ?? '') && !in_array($angebot['konditionen'] ?? '', array_column($konditionen_vorlagen, 'name')) ? htmlspecialchars($angebot['konditionen']) : '' ?>">
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+        <?php endif; ?>
 
         <h4 class="mb-3"><i class="fas fa-box me-2"></i>Positionen</h4>
         <div id="positionen">

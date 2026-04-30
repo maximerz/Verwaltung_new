@@ -38,11 +38,11 @@ try {
     <head>
         <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .header { background: linear-gradient(135deg, #C9A227 0%, #D4AF37 100%); color: white; padding: 20px; text-align: center; }
+            .header { background: #5B7DB1; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
             .content { padding: 20px; }
-            .info-box { background: #f8f9fa; padding: 15px; margin: 20px 0; border-left: 4px solid #C9A227; }
-            .button { background: #C9A227; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; }
-            .footer { background: #f8f9fa; padding: 15px; text-align: center; font-size: 0.9em; color: #666; margin-top: 30px; }
+            .info-box { background: #f8f9fa; padding: 15px; margin: 20px 0; border-left: 4px solid #5B7DB1; border-radius: 0 8px 8px 0; }
+            .button { background: #5B7DB1; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0; }
+            .footer { background: #f8f9fa; padding: 15px; text-align: center; font-size: 0.9em; color: #666; margin-top: 30px; border-radius: 0 0 10px 10px; }
         </style>
     </head>
     <body>
@@ -122,7 +122,7 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, rgba(26,26,46,0.97) 0%, rgba(22,33,62,0.97) 100%);
+            background: #F0F2F5;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -140,19 +140,20 @@ try {
         .success { color: #28a745; font-size: 3em; }
         .error { color: #dc3545; font-size: 3em; }
         .btn-custom {
-            background: linear-gradient(135deg, #C9A227 0%, #D4AF37 100%);
+            background: #5B7DB1;
             color: white;
             border: none;
             padding: 12px 30px;
-            border-radius: 50px;
+            border-radius: 10px;
             margin: 10px;
             text-decoration: none;
             display: inline-block;
             font-weight: 600;
+            transition: all 0.2s ease;
         }
         .btn-custom:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(201,162,39,0.4);
+            box-shadow: 0 5px 20px rgba(91, 125, 177, 0.4);
             color: white;
         }
     </style>

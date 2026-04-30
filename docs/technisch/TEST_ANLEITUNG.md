@@ -20,7 +20,7 @@
 ```bash
 # Manuelles Backup erstellen
 cd /home/maxi/Dokumente/Projekts/projekt1
-./backup.sh
+./scripts/backup.sh
 
 # Prüfe ob Backup erstellt wurde
 ls -lh backups/
@@ -28,7 +28,7 @@ ls -lh backups/
 # Automatisches Backup einrichten (täglich um 2 Uhr nachts)
 crontab -e
 # Füge hinzu:
-0 2 * * * /home/maxi/Dokumente/Projekts/projekt1/backup.sh
+0 2 * * * /home/maxi/Dokumente/Projekts/projekt1/scripts/backup.sh
 ```
 
 **Backup wiederherstellen:**
@@ -91,7 +91,7 @@ curl "http://localhost/projekt1/api/index.php?api_key=YOUR_API_KEY" \
 2. **Backup erstellen:**
    ```bash
    cd /home/maxi/Dokumente/Projekts/projekt1
-   ./backup.sh
+   ./scripts/backup.sh
    ls -lh backups/
    ```
    - Erwartung: Neue .db.gz Datei im backups/ Ordner
@@ -163,7 +163,7 @@ CREATE TABLE qualitaetspruefungen (
 
 **Backup funktioniert nicht:**
 ```bash
-chmod +x backup.sh
+chmod +x scripts/backup.sh
 mkdir -p backups
 ```
 

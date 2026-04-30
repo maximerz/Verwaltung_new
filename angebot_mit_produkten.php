@@ -73,7 +73,7 @@ $lagerartikel = $stmt->fetchAll();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary: linear-gradient(135deg, #C9A227 0%, #D4AF37 100%);
+            --primary: linear-gradient(135deg, #5B7DB1 0%, #D4AF37 100%);
         }
         body { background: linear-gradient(135deg, rgba(26,26,46,0.97) 0%, rgba(22,33,62,0.97) 50%); min-height: 100vh; padding: 20px; }
         .container-main { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 25px; }

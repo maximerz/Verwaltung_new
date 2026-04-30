@@ -1,0 +1,15 @@
+[Unit]
+Description=ERP PHP Server
+After=network.target
+
+[Service]
+Type=forking
+User=maxi
+WorkingDirectory=/home/maxi/Dokumente/Projekts/projekt1
+ExecStart=/home/maxi/Dokumente/Projekts/projekt1/scripts/autostart-erp.sh
+ExecStop=/usr/bin/pkill -f "php -S.*:8000"
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

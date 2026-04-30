@@ -114,6 +114,7 @@ try {
 
     <div class="mb-4">
         <a href="kunden_verwaltung.php" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Zurück zur Kundenliste</a>
+        <a href="edit_customer.php?id=<?= $kunde_id ?>" class="btn btn-primary"><i class="fas fa-edit me-2"></i>Daten bearbeiten</a>
         <a href="angebot_formular.php?kunde_id=<?= $kunde_id ?>" class="btn btn-success"><i class="fas fa-file-invoice me-2"></i>Neues Angebot</a>
         <a href="delete_customer.php?id=<?= $kunde_id ?>" class="btn btn-danger" onclick="return confirm('Kunde wirklich löschen?')"><i class="fas fa-trash me-2"></i>Kunde löschen</a>
     </div>
@@ -151,6 +152,20 @@ try {
             <p class="mb-0"><strong>Adresse:</strong> <?= htmlspecialchars(($kunde['strasse'] ?? '') . ', ' . ($kunde['ort'] ?? '')) ?></p>
         <?php endif; ?>
     </div>
+
+    <?php if ($kunde['hinweise']): ?>
+    <div class="alert alert-warning mb-4">
+        <h5 class="mb-3"><i class="fas fa-sticky-note me-2"></i>Hinweise</h5>
+        <p class="mb-0"><?= nl2br(htmlspecialchars($kunde['hinweise'])) ?></p>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($kunde['konditionen']): ?>
+    <div class="alert alert-info mb-4">
+        <h5 class="mb-3"><i class="fas fa-handshake me-2"></i>Konditionen</h5>
+        <p class="mb-0"><?= nl2br(htmlspecialchars($kunde['konditionen'])) ?></p>
+    </div>
+    <?php endif; ?>
 
     <h4 class="mb-3"><i class="fas fa-file-invoice me-2"></i>Angebote & Bestellungen</h4>
     
