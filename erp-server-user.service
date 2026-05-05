@@ -1,0 +1,13 @@
+[Unit]
+Description=ERP PHP Server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/maxi/Dokumente/Projekts/projekt1
+ExecStart=/usr/bin/php -S 127.0.0.1:8000 -t /home/maxi/Dokumente/Projekts/projekt1
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

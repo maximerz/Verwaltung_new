@@ -1,14 +1,16 @@
 <?php
 session_start();
-require_once 'db_connection.php';
+require_once __DIR__ . '/../db_connection.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header('Location: login.php');
+$action = $_POST['action'] ?? '';
+
+if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
+    header('Location: /login.php');
     exit;
 }
 
 // LDAP-Konfiguration speichern
-if ($_POST['action'] === 'save_ldap') {
+if ($action === 'save_ldap') {
     $stmt = $PDO->prepare("DELETE FROM ldap_config");
     $stmt->execute();
     
@@ -28,7 +30,7 @@ if ($_POST['action'] === 'save_ldap') {
 }
 
 // LDAP-Verbindung testen
-if ($_POST['action'] === 'test_ldap') {
+if ($action === 'test_ldap') {
     $server = $_POST['server'];
     $port = $_POST['port'];
     $bind_dn = $_POST['bind_dn'];
@@ -91,7 +93,7 @@ $config = $stmt->fetch() ?: [];
         </div>
 
         <div style="text-align: center; margin-bottom: 20px;">
-            <a href="user_management.php" class="btn btn-secondary">⬅️ Zurück zur Benutzerverwaltung</a>
+            <a href="/user_management.php" class="btn btn-secondary">⬅️ Zurück zur Benutzerverwaltung</a>
         </div>
 
         <?php if (isset($success)): ?>

@@ -8,15 +8,21 @@
 - [x] 5. login.php - Eigene Styles mit Glassmorphismus aktualisieren
 - [x] 6. register.php - Eigene Styles mit Glassmorphismus aktualisieren
 - [x] 7. admin_requests.php - Eigene Styles mit Glassmorphismus aktualisieren
+- [x] 8. Komplettes Redesign zu schlichtem, modernem Design (2025)
+- [x] 9. includes/table-style.php - Tabellen-Styles überarbeiten
+- [x] 10. lieferschein_editor.php - Lieferschein-Design aktualisieren
+- [x] 11. Dark Mode Unterstützung hinzufügen (2025)
 
 ## Design-Änderungen:
-- Neue, modernere Farbpalette mit verbesserten Kontrasten
-- Glassmorphismus-Effekte für Karten und Overlays
-- Sanftere Animationen und Übergänge
-- Floating Background Shapes auf allen Seiten
+- Neue, moderne Farbpalette mit verbesserten Kontrasten (2025 Update)
+- Schlichtes, cleanes Design ohne übermäßige Effekte
+- Inter-Schriftart für bessere Lesbarkeit
+- Konsistente Abstände und Rundungen
+- Minimale Schatten und Effekte für Professionalität
 - Einheitliches Design über alle Seiten
-- Verbesserte Gradienten (Dreifarb-Verlauf)
-- Bessere Schatten und Tiefe
+- Verbesserte Farben: Blau als Primary, Grau als Secondary
+- Bessere Responsivität und Zugänglichkeit
+- Vollständige Dark Mode Unterstützung mit Theme-Switcher
 
-## Status: Abgeschlossen ✓
+## Status: Abgeschlossen ✓ (2025 Redesign mit Dark Mode)
 

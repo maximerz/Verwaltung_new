@@ -45,7 +45,39 @@ function has_valid_2fa_remember($PDO, $user_id) {
 }
 
 /**
- * Set 2FA remember token for 30 days
+ * Check whether the current request is HTTPS from the browser's perspective.
+ */
+function is_https_request() {
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        return true;
+    }
+
+    if (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') {
+        return true;
+    }
+
+    return str_ends_with($_SERVER['HTTP_HOST'] ?? '', '.ts.net');
+}
+
+/**
+ * Get configured 2FA remember duration in days.
+ */
+function get_2fa_remember_days($PDO) {
+    try {
+        $stmt = $PDO->prepare("SELECT setting_value FROM system_settings WHERE setting_key = '2fa_remember_days'");
+        $stmt->execute();
+        $setting = $stmt->fetch();
+        $days = (int)($setting['setting_value'] ?? 30);
+
+        return max(1, min($days, 365));
+    } catch (Exception $e) {
+        error_log("2FA remember days read error: " . $e->getMessage());
+        return 30;
+    }
+}
+
+/**
+ * Set 2FA remember token for the configured amount of days.
  */
 function set_2fa_remember_token($PDO, $user_id, $remember_days = 30) {
     try {
@@ -62,15 +94,18 @@ function set_2fa_remember_token($PDO, $user_id, $remember_days = 30) {
         ");
         $stmt->execute([$token, $expires, $user_id]);
         
-        // Set cookie for 30 days (expires in seconds)
+        // Set cookie for the same duration as the database token.
         $cookieExpiry = time() + ($remember_days * 24 * 60 * 60);
-        setcookie('2fa_remember', $token, $cookieExpiry, '/', '', true, true);
-        
-        // Also set in localStorage for JavaScript access
-        echo "<script>localStorage.setItem('2fa_remember', '$token');</script>";
+        setcookie('2fa_remember', $token, [
+            'expires' => $cookieExpiry,
+            'path' => '/',
+            'secure' => is_https_request(),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
         
         error_log("2FA remember token set successfully for user $user_id");
-        return true;
+        return $token;
     } catch (Exception $e) {
         error_log("2FA remember token set error: " . $e->getMessage());
         return false;
@@ -90,7 +125,13 @@ function clear_2fa_remember_token($PDO, $user_id) {
         $stmt->execute([$user_id]);
         
         // Clear cookie
-        setcookie('2fa_remember', '', time() - 3600, '/', '', true, true);
+        setcookie('2fa_remember', '', [
+            'expires' => time() - 3600,
+            'path' => '/',
+            'secure' => is_https_request(),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
         
         return true;
     } catch (Exception $e) {
@@ -258,7 +299,7 @@ function cleanup_expired_2fa_tokens($PDO) {
             SET two_factor_remember_token = NULL, 
                 two_factor_remember_expires = NULL 
             WHERE two_factor_remember_expires IS NOT NULL 
-            AND two_factor_remember_expires < datetime('now', '-30 days')
+            AND two_factor_remember_expires < datetime('now')
         ");
         $stmt->execute();
         
@@ -324,4 +365,3 @@ function check_and_force_2fa_renewal($PDO, $user_id) {
         return true; // On error, require verification
     }
 }
-

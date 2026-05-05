@@ -1,0 +1,11 @@
+(function() {
+  if (!('serviceWorker' in navigator)) {
+    return;
+  }
+
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/service-worker.js').catch(function() {
+      // PWA support is optional; the ERP must keep working without it.
+    });
+  });
+})();

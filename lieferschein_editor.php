@@ -199,20 +199,92 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#14b8a6">
     <title>Lieferschein erstellen</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/assets/images/logo.webp">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="includes/navigation.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <style>
-        :root { --primary: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%); }
-        body { background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%); min-height: 100vh; padding: 20px; }
-        .container-main { max-width: 1400px; margin: 0 auto; background: rgba(255,255,255,0.98); padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(20,184,166,0.15); border: 2px solid rgba(20,184,166,0.1); }
-        h1, h2, h3 { background: var(--primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; }
-        .section-card { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #14b8a6; }
-        .position-card { background: #fff; padding: 20px; border-radius: 10px; margin-bottom: 15px; border: 2px solid #e9ecef; }
-        .btn-primary { background: var(--primary); border: none; }
-        .signature-pad { border: 2px solid #14b8a6; border-radius: 10px; cursor: crosshair; }
-        .camera-preview { max-width: 100%; border: 2px dashed #14b8a6; border-radius: 10px; min-height: 200px; }
+        .container-main {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            padding: var(--spacing-xl);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+        }
+
+        .section-card {
+            background: var(--bg-secondary);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-lg);
+            border: 1px solid var(--border);
+        }
+
+        .position-card {
+            background: var(--bg-card);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .signature-pad {
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            cursor: crosshair;
+            background: var(--bg-card);
+        }
+
+        .camera-preview {
+            max-width: 100%;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-md);
+            min-height: 200px;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+
+        .techniker-item {
+            background: var(--bg-secondary);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        .form-check {
+            margin-right: var(--spacing-lg);
+        }
+
+        .btn-add {
+            background: var(--color-success);
+            color: white;
+            border: none;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-remove {
+            background: var(--color-danger);
+            color: white;
+            border: none;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 12px;
+        }
     </style>
     <?php include 'includes/table-style.php'; ?>
 </head>
@@ -226,7 +298,9 @@ try {
         <?php endif; ?>
 
         <?php if ($bestellung): ?>
-        <form method="POST" id="lieferscheinForm">
+        <div class="alert alert-warning" data-offline-sync-badge hidden></div>
+
+        <form method="POST" id="lieferscheinForm" data-offline-sync="lieferschein">
             <input type="hidden" name="bestellung_id" value="<?= $bestellung_id ?>">
             <input type="hidden" name="kundennummer" value="<?= $bestellung['kundennummer'] ?>">
             <input type="hidden" name="unterschrift_data" id="unterschrift_data">
@@ -285,7 +359,7 @@ try {
                     }
                     foreach ($techniker_liste as $tech_index => $tech): 
                     ?>
-                    <div class="techniker-item mb-3" style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                    <div class="techniker-item mb-3" style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
                         <div class="row g-3">
                             <div class="col-md-5">
                                 <label class="form-label">Techniker *</label>
@@ -350,7 +424,7 @@ try {
                                 
                                 <!-- Seriennummern Container -->
                                 <div class="col-12">
-                                    <div class="seriennummern-container" style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                                    <div class="seriennummern-container" style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
                                         <h6>Seriennummern:</h6>
                                         <div class="seriennummern-list">
                                             <?php 
@@ -368,9 +442,8 @@ try {
                                                     <div class="col-md-4">
                                                         <input type="hidden" name="seriennummer_fotos[<?= $index ?>][]" class="sn-foto-data" value="<?= htmlspecialchars($sn['foto_data'] ?? '') ?>">
                                                         <button type="button" class="btn btn-sm btn-primary" onclick="openCameraForSN(this)">📷 Foto</button>
-                                                        <?php if (!empty($sn['foto_data'])): ?>
-                                                            <span class="text-success">✓ Foto vorhanden</span>
-                                                        <?php endif; ?>
+                                                        <span class="sn-photo-status <?= !empty($sn['foto_data']) ? 'text-success' : 'text-muted' ?>"><?= !empty($sn['foto_data']) ? '✓ Foto vorhanden' : '' ?></span>
+                                                        <div class="sn-ocr-status small text-muted"></div>
                                                     </div>
                                                     <div class="col-md-2">
                                                         <button type="button" class="btn btn-sm btn-danger" onclick="removeSN(this)">🗑️</button>
@@ -441,6 +514,8 @@ try {
         <?php endif; ?>
     </div>
 
+    <input type="file" id="serial-photo-input" accept="image/*" capture="environment" style="display:none;">
+
     <!-- Kamera Modal -->
     <div class="modal fade" id="cameraModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -465,6 +540,9 @@ try {
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="/assets/js/pwa.js"></script>
+    <script src="/assets/js/offline-sync.js"></script>
     <script>
         let positionCounter = <?= count($positionen ?? []) ?>;
         let currentPhotoInput = null;
@@ -507,7 +585,7 @@ try {
             const container = document.getElementById('techniker-container');
             const div = document.createElement('div');
             div.className = 'techniker-item mb-3';
-            div.style.cssText = 'background: #f8f9fa; padding: 15px; border-radius: 8px;';
+            div.style.cssText = 'background: var(--bg-secondary); padding: 15px; border-radius: 8px; border: 1px solid var(--border);';
             
             let optionsHTML = '<option value="">-- Techniker wählen --</option>';
             alleUser.forEach(user => {
@@ -591,7 +669,7 @@ try {
                         <button type="button" class="btn btn-success w-100" onclick="addSeriennummer(this)">➕ Seriennummer</button>
                     </div>
                     <div class="col-12">
-                        <div class="seriennummern-container" style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <div class="seriennummern-container" style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
                             <h6>Seriennummern:</h6>
                             <div class="seriennummern-list">
                                 <div class="seriennummer-item mb-2">
@@ -602,6 +680,8 @@ try {
                                         <div class="col-md-4">
                                             <input type="hidden" name="seriennummer_fotos[${positionCounter-1}][]" class="sn-foto-data">
                                             <button type="button" class="btn btn-sm btn-primary" onclick="openCameraForSN(this)">📷 Foto</button>
+                                            <span class="sn-photo-status text-muted"></span>
+                                            <div class="sn-ocr-status small text-muted"></div>
                                         </div>
                                         <div class="col-md-2">
                                             <button type="button" class="btn btn-sm btn-danger" onclick="removeSN(this)">🗑️</button>
@@ -649,6 +729,8 @@ try {
                     <div class="col-md-4">
                         <input type="hidden" name="seriennummer_fotos[${posIndex}][]" class="sn-foto-data">
                         <button type="button" class="btn btn-sm btn-primary" onclick="openCameraForSN(this)">📷 Foto</button>
+                        <span class="sn-photo-status text-muted"></span>
+                        <div class="sn-ocr-status small text-muted"></div>
                     </div>
                     <div class="col-md-2">
                         <button type="button" class="btn btn-sm btn-danger" onclick="removeSN(this)">🗑️</button>
@@ -670,6 +752,13 @@ try {
         // Kamera
         function openCameraForSN(btn) {
             currentPhotoInput = btn.parentElement.querySelector('.sn-foto-data');
+            const fileInput = document.getElementById('serial-photo-input');
+
+            if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                fileInput.click();
+                return;
+            }
+
             cameraModal.show();
             
             navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
@@ -677,20 +766,131 @@ try {
                     cameraStream = stream;
                     document.getElementById('camera-stream').srcObject = stream;
                 })
-                .catch(err => alert('Kamera-Zugriff fehlgeschlagen: ' + err.message));
+                .catch(() => {
+                    cameraModal.hide();
+                    fileInput.click();
+                });
+        }
+
+        function storeSerialPhoto(photoData) {
+            if (!currentPhotoInput || !photoData) {
+                return;
+            }
+
+            currentPhotoInput.value = photoData;
+
+            const status = currentPhotoInput.parentElement.querySelector('.sn-photo-status');
+            if (status) {
+                status.className = 'sn-photo-status text-success';
+                status.textContent = '✓ Foto vorhanden';
+            }
+
+            extractSerialNumberFromPhoto(photoData);
+        }
+
+        function getCurrentSerialNumberInput() {
+            const item = currentPhotoInput ? currentPhotoInput.closest('.seriennummer-item') : null;
+            return item ? item.querySelector('input[name^="seriennummern"]') : null;
+        }
+
+        function getCurrentOcrStatus() {
+            const item = currentPhotoInput ? currentPhotoInput.closest('.seriennummer-item') : null;
+            return item ? item.querySelector('.sn-ocr-status') : null;
+        }
+
+        function normalizeOcrToken(token) {
+            return token
+                .replace(/[|]/g, 'I')
+                .replace(/[^\w./-]/g, '')
+                .replace(/^[.:/\-]+/, '')
+                .replace(/[.:/\-]+$/, '')
+                .trim();
+        }
+
+        function findSerialNumberCandidate(text) {
+            const normalizedText = text
+                .replace(/[|]/g, 'I')
+                .replace(/[：]/g, ':')
+                .replace(/\r?\n/g, ' ')
+                .replace(/\s+/g, ' ');
+
+            const labelPattern = /(?:\bS\s*[\/.-]?\s*N\b|\b5\s*[\/.-]?\s*N\b|\bSerien\s*(?:nummer|nr\.?|no\.?)\b|\bSerial\s*(?:number|no\.?)?\b)\s*[:#\-]?\s*/ig;
+            const matches = Array.from(normalizedText.matchAll(labelPattern));
+
+            for (const labelMatch of matches) {
+                const afterLabel = normalizedText.slice(labelMatch.index + labelMatch[0].length);
+                const valueMatch = afterLabel.match(/([A-Z0-9][A-Z0-9._/-]{3,39})/i);
+                if (!valueMatch) {
+                    continue;
+                }
+
+                const candidate = normalizeOcrToken(valueMatch[1]);
+                if (candidate.length >= 4 && candidate.length <= 40 && /\d/.test(candidate)) {
+                    return candidate;
+                }
+            }
+
+            return '';
+        }
+
+        async function extractSerialNumberFromPhoto(photoData) {
+            const serialInput = getCurrentSerialNumberInput();
+            const ocrStatus = getCurrentOcrStatus();
+
+            if (!serialInput || !window.Tesseract) {
+                if (ocrStatus) {
+                    ocrStatus.textContent = 'Texterkennung nicht verfügbar';
+                }
+                return;
+            }
+
+            if (ocrStatus) {
+                ocrStatus.className = 'sn-ocr-status small text-muted';
+                ocrStatus.textContent = 'Seriennummer wird erkannt...';
+            }
+
+            try {
+                const result = await Tesseract.recognize(photoData, 'eng');
+                const candidate = findSerialNumberCandidate(result.data.text || '');
+
+                if (!candidate) {
+                    if (ocrStatus) {
+                        ocrStatus.className = 'sn-ocr-status small text-warning';
+                        ocrStatus.textContent = 'Keine Seriennummer neben SN/Seriennummer erkannt';
+                    }
+                    return;
+                }
+
+                if (!serialInput.value.trim() || confirm(`Seriennummer "${candidate}" übernehmen?`)) {
+                    serialInput.value = candidate;
+                }
+
+                if (ocrStatus) {
+                    ocrStatus.className = 'sn-ocr-status small text-success';
+                    ocrStatus.textContent = `Erkannt: ${candidate}`;
+                }
+            } catch (error) {
+                if (ocrStatus) {
+                    ocrStatus.className = 'sn-ocr-status small text-warning';
+                    ocrStatus.textContent = 'Texterkennung fehlgeschlagen';
+                }
+            }
         }
 
         function capturePhoto() {
             const video = document.getElementById('camera-stream');
             const canvas = document.getElementById('camera-canvas');
+            if (!video.videoWidth || !video.videoHeight) {
+                alert('Noch kein Kamerabild verfügbar. Bitte kurz warten und erneut versuchen.');
+                return;
+            }
+
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0);
             
             const photoData = canvas.toDataURL('image/jpeg');
-            if (currentPhotoInput) {
-                currentPhotoInput.value = photoData;
-            }
+            storeSerialPhoto(photoData);
             
             if (cameraStream) {
                 cameraStream.getTracks().forEach(track => track.stop());
@@ -698,6 +898,42 @@ try {
             cameraModal.hide();
             alert('Foto aufgenommen!');
         }
+
+        document.getElementById('serial-photo-input').addEventListener('change', function() {
+            const file = this.files && this.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const image = new Image();
+                image.onload = function() {
+                    const maxSize = 1600;
+                    let width = image.width;
+                    let height = image.height;
+
+                    if (width > height && width > maxSize) {
+                        height = Math.round(height * maxSize / width);
+                        width = maxSize;
+                    } else if (height > maxSize) {
+                        width = Math.round(width * maxSize / height);
+                        height = maxSize;
+                    }
+
+                    const canvas = document.getElementById('camera-canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    canvas.getContext('2d').drawImage(image, 0, 0, width, height);
+
+                    storeSerialPhoto(canvas.toDataURL('image/jpeg', 0.82));
+                    alert('Foto aufgenommen!');
+                };
+                image.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+            this.value = '';
+        });
 
         document.getElementById('cameraModal').addEventListener('hidden.bs.modal', function() {
             if (cameraStream) {

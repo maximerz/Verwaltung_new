@@ -141,7 +141,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['username']) && !isset(
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['2fa_code'])) {
     $user_id = $_SESSION['temp_user_id'] ?? null;
-    $remember = $_POST['remember_2fa'] ?? false;
+    $remember = ($_POST['remember_2fa'] ?? '') === '1';
 
     if (!$user_id) {
         $error = "Session abgelaufen. Bitte erneut anmelden.";
@@ -161,17 +161,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['2fa_code'])) {
                     // Update verification timestamp
                     update_2fa_verified_time($PDO, $user_id);
 
-                    // Set remember token if checkbox is checked
-                    $remember_token_set = false;
+                    // Set remember token only when the user checked "30 Tage merken".
                     if ($remember) {
-                        $remember_token_set = set_2fa_remember_token($PDO, $user_id, 30);
-                        // Store in localStorage for cross-tab compatibility
-                        echo '<script>
-                            if (window.localStorage) {
-                                localStorage.setItem("2fa_remember", "1");
-                                localStorage.setItem("2fa_remember_date", "' . date('Y-m-d H:i:s') . '");
-                            }
-                        </script>';
+                        $remember_days = get_2fa_remember_days($PDO);
+                        $remember_token = set_2fa_remember_token($PDO, $user_id, $remember_days);
+
+                        if (!$remember_token) {
+                            error_log("2FA remember token could not be stored for user $user_id");
+                        }
                     }
 
                     finalize_login($user, $_SESSION['temp_username']);
@@ -336,16 +333,6 @@ function finalize_login($user, $username) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Check for 2FA remember token on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const hasLocalStorage2FA = localStorage.getItem('2fa_remember') === '1';
-            const hasCookie2FA = document.cookie.indexOf('2fa_remember') !== -1;
-            
-            // If we have a valid token (from cookie or localStorage), try to auto-login
-            // This is handled server-side, but we show feedback here
-            console.log('2FA remember check:', { hasLocalStorage2FA, hasCookie2FA });
-        });
-
         function toggleAuthTheme() {
             const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
             const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
