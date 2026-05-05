@@ -21,6 +21,8 @@ $navigation_items = [
 
 if ($user_role === 'admin' || !empty($_SESSION['can_manage_users'])) {
     $navigation_items[] = ['file' => 'user_management.php', 'label' => 'Admin', 'icon' => 'fa-shield-halved'];
+}
+if ($user_role === 'admin' || !empty($_SESSION['can_manage_users']) || $user_role === 'template_editor') {
     $navigation_items[] = ['file' => 'document_templates.php', 'label' => 'Vorlagen', 'icon' => 'fa-file-signature'];
 }
 
@@ -36,7 +38,10 @@ $aside_value = $logged_in ? $username : 'Nicht angemeldet';
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#14b8a6">
     <title><?= htmlspecialchars($page_title) ?></title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/assets/images/logo.webp">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
