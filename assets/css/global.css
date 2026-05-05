@@ -1,4 +1,4 @@
-.table-responsive,
+sudo chown -R $USER:$USER /var/www/projekt1-demo.table-responsive,
 .modern-table {
     scrollbar-width: thin;
 }
@@ -41,19 +41,7 @@
     --bs-table-bg: var(--warning-light);
 }
 
-/* Fix white text in light mode */
-[data-theme="light"] .btn, 
-[data-theme="light"] .action-btn,
-[data-theme="light"] button,
-[data-theme="light"] .btn-primary,
-[data-theme="light"] .btn-success,
-[data-theme="light"] .card,
-[data-theme="light"] .info-box,
-[data-theme="light"] h1, h2, h3, h4, h5,
-[data-theme="light"] p,
-[data-theme="light"] .text {
-    color: #000 !important;
-}
+
 
 .fa,
 .fas,

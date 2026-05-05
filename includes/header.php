@@ -44,9 +44,9 @@ $aside_value = $logged_in ? $username : 'Nicht angemeldet';
     <link rel="apple-touch-icon" href="/assets/images/logo.webp">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/global.css">
-    <link rel="stylesheet" href="includes/navigation.css">
+
     <style>
         [data-theme="light"] .app-brand-mark {
             background: linear-gradient(135deg, #14b8a6, #0d9488) !important;

@@ -8,12 +8,21 @@ session_start();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Datenschutzerklärung - DSGVO konform">
     <title>Datenschutzerklärung - ERP System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <?php include 'includes/modern-light-style.php'; ?>
     <style>
         :root {
             --primary: #14b8a6;
+            --dark: #1f2937;
+            --text: #374151;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --bg: #ffffff;
+            --bg-muted: #f9fafb;
+        }
+        /* ... rest inline styles ... */
+    </style>
+
             --dark: #1f2937;
             --text: #374151;
             --text-muted: #6b7280;
