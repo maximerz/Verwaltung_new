@@ -138,7 +138,14 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <tr>
                                 <td><strong><?php echo htmlspecialchars($user['username']); ?></strong></td>
                                 <td>
-                                    <span class="badge <?php echo $user['role'] === 'admin' ? 'bg-danger' : 'bg-primary'; ?>">
+<span class="badge <?php 
+$role_class = match($user['role']) {
+    'admin' => 'bg-danger',
+    'template_editor' => 'bg-warning text-dark',
+    default => 'bg-primary'
+};
+echo $role_class; 
+?>">
                                         <?php echo ucfirst($user['role']); ?>
                                     </span>
                                 </td>
@@ -188,6 +195,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <select name="new_role" class="form-select form-select-sm d-inline-block" style="width: auto; display: inline-block;" onchange="this.form.submit()">
                                                 <option value="user" <?php echo $user['role'] === 'user' ? 'selected' : ''; ?>>👤 User</option>
                                                 <option value="admin" <?php echo $user['role'] === 'admin' ? 'selected' : ''; ?>>🔒 Admin</option>
+                                                <option value="template_editor" <?php echo $user['role'] === 'template_editor' ? 'selected' : ''; ?>>📄 Template Editor</option>
                                             </select>
                                             <input type="hidden" name="action" value="change_role">
                                         </form>

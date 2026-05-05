@@ -3,7 +3,7 @@ session_start();
 require_once 'db_connection.php';
 require_once 'includes/document_templates.php';
 
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? 'user', ['admin', 'template_editor'])) {
     header('Location: login.php');
     exit();
 }
