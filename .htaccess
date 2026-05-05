@@ -1,0 +1,7 @@
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ login_gate.php [L,QSA]
+
+# Force login first
+RewriteRule ^(web_oberflaeche\.php|index\.php)$ login_gate.php [L,QSA]
