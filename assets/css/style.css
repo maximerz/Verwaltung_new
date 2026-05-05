@@ -685,6 +685,12 @@ a:hover {
     padding: 1.2rem 1.2rem 0;
 }
 
+[data-theme="light"] .app-nav {
+    backdrop-filter: blur(18px);
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
 .app-nav {
     backdrop-filter: blur(18px);
     background: var(--bg-nav);
