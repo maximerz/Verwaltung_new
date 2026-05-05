@@ -47,6 +47,14 @@ $aside_value = $logged_in ? $username : 'Nicht angemeldet';
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/global.css">
     <link rel="stylesheet" href="includes/navigation.css">
+    <style>
+        [data-theme="light"] .app-brand-mark {
+            background: linear-gradient(135deg, #14b8a6, #0d9488) !important;
+        }
+        [data-theme="light"] svg, [data-theme="light"] img {
+            filter: none !important;
+        }
+    </style>
     <script>
         document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
     </script>

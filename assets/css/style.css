@@ -1188,6 +1188,14 @@ textarea:focus {
     font-weight: 800;
     letter-spacing: -0.01em;
     transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+    color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .btn-primary,
+[data-theme="light"] .btn-primary-modern,
+[data-theme="light"] .btn-success,
+[data-theme="light"] .btn-success-modern {
+    color: #fff !important;
 }
 
 .btn:hover,
@@ -1200,7 +1208,7 @@ textarea:focus {
 .btn-success,
 .btn-success-modern {
     background: var(--gradient-primary) !important;
-    color: #fff !important;
+    color: #000 !important;
     box-shadow: 0 18px 30px rgba(239, 108, 47, 0.18);
 }
 
