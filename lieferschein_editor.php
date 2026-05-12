@@ -977,19 +977,32 @@ try {
             }
         });
 
-        // Zusätzliches Hard-Reset beim Seiten-Load: Modal explizit geschlossen halten.
-        // (verhindert Fälle, in denen Bootstrap/DOM-Reflow das Modal im Hintergrund öffnet)
+        // Hard-Reset beim Seiten-Load: Modal explizit geschlossen halten.
+        // Verhindert Fälle, in denen Bootstrap/DOM-Reflow/andere Scripts das Modal fälschlich öffnen.
         document.addEventListener('DOMContentLoaded', function() {
+            // cameraModal-Instanz aus Bootstrap entfernen, falls sie schon existiert.
+            try {
+                if (cameraModal && typeof cameraModal.hide === 'function') {
+                    cameraModal.hide();
+                }
+            } catch (e) {}
+
             const el = document.getElementById('cameraModal');
             if (el) {
                 el.classList.remove('show');
                 el.style.display = 'none';
                 el.setAttribute('aria-hidden', 'true');
 
-                const backdrop = document.querySelector('.modal-backdrop');
-                if (backdrop) backdrop.remove();
+                // Backdrop entfernen
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(b => b.remove());
+
+                // Falls Bootstrap eine "in" Klasse setzt
+                el.classList.remove('show');
+                el.classList.remove('in');
             }
         });
+
 
     </script>
 </body>
