@@ -195,8 +195,12 @@ try {
 }
 ?>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="light">
 <head>
+    <script>
+        document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#14b8a6">
@@ -517,9 +521,10 @@ try {
     <input type="file" id="serial-photo-input" accept="image/*" capture="environment" style="display:none;">
 
     <!-- Kamera Modal -->
-    <div class="modal fade" id="cameraModal" tabindex="-1">
+    <div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
+
                 <div class="modal-header">
                     <h5 class="modal-title">📷 Seriennummer fotografieren</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -547,9 +552,21 @@ try {
         let positionCounter = <?= count($positionen ?? []) ?>;
         let currentPhotoInput = null;
         let cameraStream = null;
-        const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
-        
+        // Kamera-Modal wird erst bei Bedarf erstellt, damit beim Seiten-Load kein unbeabsichtigtes Öffnen durch JS/Bootstrap passiert.
+        let cameraModal = null;
+
+        // Seriennummer-Foto niemals automatisch starten.
+        // Kamera/Dateiauswahl wird nur geöffnet, wenn der User explizit auf "📷 Foto" klickt.
+        // (Falls ein Browser/Framework beim Rendern/Modal-Setup Events triggert, halten wir das hier komplett zurück.)
+        window.__lsUserInteracted = false;
+
+
+
+
+
+
         // Alle User für Techniker-Dropdown
+
         const alleUser = <?= !empty($alle_user) ? json_encode($alle_user) : '[]' ?>;
         
         // Select2 initialisieren
@@ -751,25 +768,43 @@ try {
 
         // Kamera
         function openCameraForSN(btn) {
+            // Startet Kamera/Upload-Dialog ausschließlich nach echtem Klick auf den "📷 Foto"-Button.
+            if (!btn || !btn.closest || !btn.closest('button')) {
+                return;
+            }
+
+
+
             currentPhotoInput = btn.parentElement.querySelector('.sn-foto-data');
             const fileInput = document.getElementById('serial-photo-input');
 
+
+            // In unsicheren Umgebungen NICHT automatisch den Dialog öffnen,
+            // sondern nur den Kamera-Modal auslassen.
             if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 fileInput.click();
                 return;
             }
 
-            cameraModal.show();
-            
+            // Modal erst anzeigen, wenn Kamera-Stream wirklich bereit ist.
+            // Stream zuerst holen, dann erst Modal anzeigen.
             navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
                 .then(stream => {
                     cameraStream = stream;
                     document.getElementById('camera-stream').srcObject = stream;
+
+                    if (!cameraModal) {
+                        cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
+                    }
+                    cameraModal.show();
                 })
                 .catch(() => {
-                    cameraModal.hide();
+                    if (cameraModal) {
+                        cameraModal.hide();
+                    }
                     fileInput.click();
                 });
+
         }
 
         function storeSerialPhoto(photoData) {
@@ -935,11 +970,27 @@ try {
             this.value = '';
         });
 
+        // Sicherheit: Sobald das Modal geschlossen wird, Kamera-Stream stoppen.
         document.getElementById('cameraModal').addEventListener('hidden.bs.modal', function() {
             if (cameraStream) {
                 cameraStream.getTracks().forEach(track => track.stop());
             }
         });
+
+        // Zusätzliches Hard-Reset beim Seiten-Load: Modal explizit geschlossen halten.
+        // (verhindert Fälle, in denen Bootstrap/DOM-Reflow das Modal im Hintergrund öffnet)
+        document.addEventListener('DOMContentLoaded', function() {
+            const el = document.getElementById('cameraModal');
+            if (el) {
+                el.classList.remove('show');
+                el.style.display = 'none';
+                el.setAttribute('aria-hidden', 'true');
+
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
+            }
+        });
+
     </script>
 </body>
 </html>
