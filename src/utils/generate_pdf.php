@@ -150,8 +150,27 @@ try {
         <p>' . render_document_template_html($template['footer_text'], $template_vars) . '</p>
     </div>';
 
-    $pdf->writeHTML($html, true, false, true, false, '');
-    $pdf->Output('Bestellbestaetigung_' . $order['auftragsnummer'] . '.pdf', 'I');
+$pdf->writeHTML($html, true, false, true, false, '');
+
+    // Prüfen ob Nextcloud Upload gewünscht ist
+    $doUpload = isset($_GET['nextcloud']) && (string)$_GET['nextcloud'] === '1';
+
+    $pdfBytes = $pdf->Output('Bestellbestaetigung_' . $order['auftragsnummer'] . '.pdf', 'S');
+
+    // Browser-Stream weiterhin anbieten
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: inline; filename="Bestellbestaetigung_' . $order['auftragsnummer'] . '.pdf"');
+    echo $pdfBytes;
+
+    if ($doUpload) {
+        require_once __DIR__ . '/nextcloud_webdav.php';
+        $filename = 'Bestellbestaetigung_' . $order['auftragsnummer'] . '.pdf';
+        $kundeNum = (int)($order['kundennummer'] ?? 0);
+
+        $lastInfo = null;
+        nextcloud_webdav_upload_pdf_for_order($kundeNum, $pdfBytes, $filename, 'Rechnungen/Bestellungen', $lastInfo);
+    }
+
 
 } catch (Exception $e) {
     die("Fehler: " . htmlspecialchars($e->getMessage()));
